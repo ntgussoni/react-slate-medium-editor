@@ -6,10 +6,13 @@
   "private": true,
   "dependencies": {
     "prop-types": "^15.6.2",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
     "react-scripts": "^1.1.4",
-    "react-slate-medium-editor": "file:.."
+    "react-slate-medium-editor": "file:..",
+    "slate": "^0.44.10",
+    "slate-react": "^0.21.16",
+    "immutable": "^4.0.0-rc.12"
   },
   "scripts": {
     "start": "react-scripts start",
