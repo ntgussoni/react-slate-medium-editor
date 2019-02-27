@@ -4,6 +4,11 @@
 
 [![NPM](https://img.shields.io/npm/v/react-slate-medium-editor.svg)](https://www.npmjs.com/package/react-slate-medium-editor) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
+
+## WORK IN PROGRESS
+
+
+
 ## Install
 
 ```bash
