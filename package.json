@@ -22,16 +22,16 @@
     "deploy": "gh-pages -d example/build"
   },
   "dependencies": {
+    "prop-types": "^15.5.4",
     "is-url": "^1.2.4",
     "styled-components": "^4.1.3"
   },
   "peerDependencies": {
-    "prop-types": "^15.5.4",
-    "react": "^15.0.0 || ^16.0.0",
-    "react-dom": "^15.0.0 || ^16.0.0",
+    "immutable": "^4.0.0-rc.12",
     "slate": "^0.44.10",
     "slate-react": "^0.21.16",
-    "immutable": "^4.0.0-rc.12"
+    "react": "^15.0.0 || ^16.0.0",
+    "react-dom": "^15.0.0 || ^16.0.0"
   },
   "devDependencies": {
     "@svgr/rollup": "^2.4.1",
@@ -52,6 +52,7 @@
     "eslint-plugin-react": "^7.10.0",
     "eslint-plugin-standard": "^3.1.0",
     "gh-pages": "^1.2.0",
+    "immutable": "^4.0.0-rc.12",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "react-scripts": "^1.1.4",
@@ -62,7 +63,9 @@
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-peer-deps-external": "^2.2.0",
     "rollup-plugin-postcss": "^1.6.2",
-    "rollup-plugin-url": "^1.4.0"
+    "rollup-plugin-url": "^1.4.0",
+    "slate": "^0.44.10",
+    "slate-react": "^0.21.16"
   },
   "files": [
     "dist"

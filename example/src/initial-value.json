@@ -9,11 +9,10 @@
             "object": "text",
             "leaves": [
               {
-                "text":
-                  "This example shows how you can make a hovering menu appear above your content, which you can use to make text "
+                "text": "This is editable "
               },
               {
-                "text": "bold",
+                "text": "rich",
                 "marks": [
                   {
                     "type": "bold"
@@ -21,10 +20,10 @@
                 ]
               },
               {
-                "text": ", "
+                "text": " text, "
               },
               {
-                "text": "italic",
+                "text": "much",
                 "marks": [
                   {
                     "type": "italic"
@@ -32,7 +31,18 @@
                 ]
               },
               {
-                "text": ", or anything else you might want to do!"
+                "text": " better than a "
+              },
+              {
+                "text": "<textarea>",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "text": "!"
               }
             ]
           }
@@ -46,21 +56,48 @@
             "object": "text",
             "leaves": [
               {
-                "text": "Try it out yourself! Just "
+                "text":
+                  "Since it's rich text, you can do things like turn a selection of text "
               },
               {
-                "text": "select any piece of text and the menu will appear",
+                "text": "bold",
                 "marks": [
                   {
                     "type": "bold"
-                  },
-                  {
-                    "type": "italic"
                   }
                 ]
               },
               {
-                "text": "."
+                "text":
+                  ", or add a semantically rendered block quote in the middle of the page, like this:"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "object": "block",
+        "type": "block-quote",
+        "nodes": [
+          {
+            "object": "text",
+            "leaves": [
+              {
+                "text": "A wise quote."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "object": "block",
+        "type": "paragraph",
+        "nodes": [
+          {
+            "object": "text",
+            "leaves": [
+              {
+                "text": "Try it out for yourself!"
               }
             ]
           }

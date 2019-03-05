@@ -5,6 +5,7 @@ import postcss from "rollup-plugin-postcss";
 import resolve from "rollup-plugin-node-resolve";
 import url from "rollup-plugin-url";
 import svgr from "@svgr/rollup";
+import json from "rollup-plugin-json";
 
 import pkg from "./package.json";
 
@@ -31,13 +32,40 @@ export default {
     url(),
     svgr(),
     babel({
-      exclude: "node_modules/**",
+      exclude: ["node_modules/**", "*.json"],
       plugins: ["external-helpers"]
+    }),
+    json({
+      exclude: ["node_modules/**"]
     }),
     resolve(),
     commonjs({
       include: "node_modules/**",
       namedExports: {
+        // "node_modules/immutable/dist/immutable.js": [
+        //   "Iterable",
+        //   "Seq",
+        //   "Collection",
+        //   "Map",
+        //   "OrderedMap",
+        //   "List",
+        //   "Stack",
+        //   "Set",
+        //   "OrderedSet",
+        //   "Record",
+        //   "Range",
+        //   "Repeat",
+        //   "is",
+        //   "fromJS"
+        // ],
+        // "node_modules/esrever/esrever.js": ["reverse"],
+        "node_modules/react/index.js": [
+          "cloneElement",
+          "createContext",
+          "Component",
+          "createElement"
+        ],
+        "node_modules/react-dom/index.js": ["render", "hydrate"],
         "node_modules/react-is/index.js": [
           "isElement",
           "isValidElementType",

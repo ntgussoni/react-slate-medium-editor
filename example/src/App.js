@@ -16,7 +16,6 @@ export default class App extends Component {
   render() {
     const { value } = this.state;
 
-    console.log(value);
     return (
       <div
         style={{

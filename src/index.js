@@ -1,9 +1,12 @@
 import React from "react";
 import styled from "styled-components";
-import { Block } from "slate";
+import Plain from "slate-plain-serializer";
+import { Block, Value, KeyUtils } from "slate";
 import { Editor, getEventRange, getEventTransfer } from "slate-react";
 import isUrl from "is-url";
 import imageExtensions from "./image-extensions";
+
+import { insertImage } from "./helpers";
 
 import HoverMenu from "./components/hover-menu";
 import SideMenu from "./components/side-menu";
@@ -29,27 +32,7 @@ const Image = styled.img`
  */
 
 function isImage(url) {
-  console.log(url);
   return !!imageExtensions.find(url.endsWith);
-}
-
-/**
- * A change function to standardize inserting images.
- *
- * @param {Editor} editor
- * @param {String} src
- * @param {Range} target
- */
-
-function insertImage(editor, src, target) {
-  if (target) {
-    editor.select(target);
-  }
-
-  editor.insertBlock({
-    type: "image",
-    data: { src }
-  });
 }
 
 /**
@@ -84,6 +67,17 @@ const schema = {
  */
 
 class HoveringMenu extends React.Component {
+  // constructor(props) {
+  //   super(props);
+  //   // KeyUtils.resetGenerator();
+  // }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: Value.fromJSON(props.value)
+    };
+  }
   /**
    * On update, update the menu.
    */
@@ -106,7 +100,7 @@ class HoveringMenu extends React.Component {
     const sideMenu = this.sideMenu;
     if (!sideMenu) return;
 
-    const { value } = this.props;
+    const { value } = this.state;
     const { selection, texts } = value;
 
     if (selection.isBlurred || !selection.isCollapsed) {
@@ -130,10 +124,10 @@ class HoveringMenu extends React.Component {
     const rect = range.getBoundingClientRect();
     sideMenu.style.opacity = 1;
 
-    const top = rect.top + window.pageYOffset - 10;
+    const top = rect.top + window.pageYOffset - (15 - rect.height / 2);
     sideMenu.style.top = `${top}px`;
 
-    const left = rect.left - sideMenu.offsetWidth;
+    const left = rect.left;
     sideMenu.style.left = `${left}px`;
   };
 
@@ -145,7 +139,7 @@ class HoveringMenu extends React.Component {
     const menu = this.menu;
     if (!menu) return;
 
-    const { value } = this.props;
+    const { value } = this.state;
     const { fragment, selection } = value;
 
     if (selection.isBlurred || selection.isCollapsed || fragment.text === "") {
@@ -174,20 +168,19 @@ class HoveringMenu extends React.Component {
    */
 
   render() {
-    const { value } = this.props;
+    const { value } = this.state;
 
     return (
       <div>
         <Editor
           placeholder="Enter some text..."
-          value={value}
+          value={value || Plain.deserialize("")}
           onChange={this.onChange}
           renderEditor={this.renderEditor}
-          renderMark={this.renderMark}
-          schema={schema}
           onDrop={this.onDropOrPaste}
           onPaste={this.onDropOrPaste}
           renderNode={this.renderNode}
+          renderMark={this.renderMark}
         />
       </div>
     );
@@ -226,16 +219,12 @@ class HoveringMenu extends React.Component {
 
   renderMark = (props, editor, next) => {
     const { children, mark, attributes } = props;
-
+    debugger;
     switch (mark.type) {
       case "bold":
         return <strong {...attributes}>{children}</strong>;
-      case "code":
-        return <code {...attributes}>{children}</code>;
       case "italic":
         return <em {...attributes}>{children}</em>;
-      case "underlined":
-        return <u {...attributes}>{children}</u>;
       default:
         return next();
     }
@@ -249,17 +238,29 @@ class HoveringMenu extends React.Component {
    */
 
   renderNode = (props, editor, next) => {
-    const { attributes, node, isFocused } = props;
+    const { attributes, node, children, isFocused } = props;
 
+    console.log(node.type, attributes);
+    debugger;
     switch (node.type) {
       case "image": {
         const src = node.data.get("src");
         return <Image src={src} selected={isFocused} {...attributes} />;
       }
-
-      default: {
+      case "block-quote":
+        return <blockquote {...attributes}>{children}</blockquote>;
+      case "bulleted-list":
+        return <ul {...attributes}>{children}</ul>;
+      case "heading-one":
+        return <h1 {...attributes}>{children}</h1>;
+      case "heading-two":
+        return <h2 {...attributes}>{children}</h2>;
+      case "list-item":
+        return <li {...attributes}>{children}</li>;
+      case "numbered-list":
+        return <ol {...attributes}>{children}</ol>;
+      default:
         return next();
-      }
     }
   };
 
@@ -277,7 +278,7 @@ class HoveringMenu extends React.Component {
 
     const transfer = getEventTransfer(event);
     const { type, text, files } = transfer;
-
+    debugger;
     if (type === "files") {
       for (const file of files) {
         const reader = new FileReader();
@@ -310,8 +311,9 @@ class HoveringMenu extends React.Component {
    */
 
   onChange = ({ value }) => {
-    const { onChange } = this.props;
-    onChange(value);
+    this.setState({ value });
+    // const { onChange } = this.props;
+    // onChange(value);
   };
 }
 
