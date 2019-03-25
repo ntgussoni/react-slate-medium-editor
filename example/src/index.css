@@ -3,3 +3,11 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+
+blockquote {
+  border-left: 10px solid #ccc;
+  padding: 1em 0 1em 3em;
+  color: #121212;
+  font-style: italic;
+}

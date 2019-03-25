@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { Editor } from "slate-react";
+import { ReactComponent as ImageIcon } from "../../assets/icons/image-regular.svg";
 
 import { insertImage } from "../../helpers";
 
@@ -9,7 +10,8 @@ import styled, { css } from "styled-components";
 
 const Button = styled.span`
   cursor: pointer;
-  color: #ccc;
+  border: 1px solid #ccc;
+  background: white;
   border-radius: 100%;
 
   ${props =>
@@ -28,13 +30,26 @@ const Button = styled.span`
       transition-duration: ${props => props.delay}ms;
       transition-timing-function: ease-in;
     `}
+
+  &:hover {
+    svg {
+      color: #ccc;
+    }
+  }
 `;
 
-const Icon = styled(({ className, ...rest }) => {
-  return <span {...rest} />;
-})`
-  font-size: 18px;
+const Icon = styled.span`
   vertical-align: text-bottom;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    height: 17px;
+    box-sizing: content-box;
+    background-size: cover;
+    color: ${props => (props.active ? "white" : "#aaa")};
+  }
 `;
 
 /**
@@ -44,13 +59,15 @@ const Icon = styled(({ className, ...rest }) => {
  */
 
 const OpenButton = styled.div`
+  cursor: pointer;
   position: relative;
   width: 30px;
   height: 30px;
   background: white;
-  border: 1px solid #222;
+  border: 1px solid #ccc;
+  color: #ccc;
+  background: white;
   border-radius: 50%;
-  display: flex;
   justify-content: center;
 
   ${props =>
@@ -91,8 +108,6 @@ const ButtonContainer = styled.div`
     position: relative;
     width: 30px;
     height: 30px;
-    background: white;
-    border: 1px solid #222;
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -154,10 +169,10 @@ export default class SideMenu extends React.Component {
         </OpenButton>
 
         <ButtonContainer>
-          {this.renderButton("image", "image", 50, opened)}
-          {this.renderButton("video", "video", 150, opened)}
-          {this.renderButton("another", "another", 250, opened)}
-          {this.renderButton("bla", "bla", 350, opened)}
+          {this.renderButton("image", ImageIcon, 50, opened)}
+          {/* {this.renderButton("video", ImageIcon, 150, opened)}
+          {this.renderButton("another", ImageIcon, 250, opened)}
+          {this.renderButton("bla", ImageIcon, 350, opened)} */}
         </ButtonContainer>
       </StyledMenu>,
       root
@@ -172,7 +187,7 @@ export default class SideMenu extends React.Component {
    * @return {Element}
    */
 
-  renderButton(type, icon, delay, opened) {
+  renderButton(type, Image, delay, opened) {
     return (
       <Button
         delay={delay}
@@ -180,7 +195,9 @@ export default class SideMenu extends React.Component {
         reversed
         onMouseDown={event => this.onButtonClick(event, type)}
       >
-        <Icon>{icon}</Icon>
+        <Icon>
+          <Image />
+        </Icon>
       </Button>
     );
   }

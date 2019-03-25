@@ -67,17 +67,11 @@ const schema = {
  */
 
 class HoveringMenu extends React.Component {
-  // constructor(props) {
-  //   super(props);
-  //   // KeyUtils.resetGenerator();
-  // }
-
   constructor(props) {
     super(props);
-    this.state = {
-      value: Value.fromJSON(props.value)
-    };
+    KeyUtils.resetGenerator();
   }
+
   /**
    * On update, update the menu.
    */
@@ -100,8 +94,11 @@ class HoveringMenu extends React.Component {
     const sideMenu = this.sideMenu;
     if (!sideMenu) return;
 
-    const { value } = this.state;
+    const { value } = this.props;
     const { selection, texts } = value;
+
+    if (!value) return;
+    if (!selection) return;
 
     if (selection.isBlurred || !selection.isCollapsed) {
       sideMenu.removeAttribute("style");
@@ -139,7 +136,8 @@ class HoveringMenu extends React.Component {
     const menu = this.menu;
     if (!menu) return;
 
-    const { value } = this.state;
+    const { value } = this.props;
+    if (!value) return;
     const { fragment, selection } = value;
 
     if (selection.isBlurred || selection.isCollapsed || fragment.text === "") {
@@ -168,7 +166,7 @@ class HoveringMenu extends React.Component {
    */
 
   render() {
-    const { value } = this.state;
+    const { value } = this.props;
 
     return (
       <div>
@@ -181,6 +179,7 @@ class HoveringMenu extends React.Component {
           onPaste={this.onDropOrPaste}
           renderNode={this.renderNode}
           renderMark={this.renderMark}
+          schema={schema}
         />
       </div>
     );
@@ -219,7 +218,6 @@ class HoveringMenu extends React.Component {
 
   renderMark = (props, editor, next) => {
     const { children, mark, attributes } = props;
-    debugger;
     switch (mark.type) {
       case "bold":
         return <strong {...attributes}>{children}</strong>;
@@ -240,8 +238,6 @@ class HoveringMenu extends React.Component {
   renderNode = (props, editor, next) => {
     const { attributes, node, children, isFocused } = props;
 
-    console.log(node.type, attributes);
-    debugger;
     switch (node.type) {
       case "image": {
         const src = node.data.get("src");
@@ -255,10 +251,12 @@ class HoveringMenu extends React.Component {
         return <h1 {...attributes}>{children}</h1>;
       case "heading-two":
         return <h2 {...attributes}>{children}</h2>;
-      case "list-item":
-        return <li {...attributes}>{children}</li>;
-      case "numbered-list":
-        return <ol {...attributes}>{children}</ol>;
+      case "heading-three":
+        return <h3 {...attributes}>{children}</h3>;
+      // case "list-item":
+      //   return <li {...attributes}>{children}</li>;
+      // case "numbered-list":
+      //   return <ol {...attributes}>{children}</ol>;
       default:
         return next();
     }
@@ -278,7 +276,7 @@ class HoveringMenu extends React.Component {
 
     const transfer = getEventTransfer(event);
     const { type, text, files } = transfer;
-    debugger;
+
     if (type === "files") {
       for (const file of files) {
         const reader = new FileReader();
@@ -311,9 +309,8 @@ class HoveringMenu extends React.Component {
    */
 
   onChange = ({ value }) => {
-    this.setState({ value });
-    // const { onChange } = this.props;
-    // onChange(value);
+    const { onChange } = this.props;
+    onChange(value);
   };
 }
 

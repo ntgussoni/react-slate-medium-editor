@@ -5,6 +5,11 @@ import { Editor } from "slate-react";
 import { ReactComponent as FormatBold } from "../../assets/icons/format_bold.svg";
 import { ReactComponent as FormatItalic } from "../../assets/icons/format_italic.svg";
 import { ReactComponent as FormatLink } from "../../assets/icons/format_link.svg";
+import { ReactComponent as FormatH1 } from "../../assets/icons/h1.svg";
+import { ReactComponent as FormatH2 } from "../../assets/icons/h2.svg";
+import { ReactComponent as FormatH3 } from "../../assets/icons/h3.svg";
+import { ReactComponent as FormatQuote } from "../../assets/icons/highlighter-regular.svg";
+
 import styled from "styled-components";
 /**
  * Define the default node type.
@@ -24,6 +29,8 @@ const Icon = styled.span`
 
   svg {
     height: 17px;
+    box-sizing: content-box;
+    background-size: cover;
     color: ${props => (props.active ? "white" : "#aaa")};
 
     &:hover {
@@ -146,12 +153,13 @@ export default class HoverMenu extends React.Component {
       <StyledMenu className={className} ref={innerRef}>
         {this.renderMarkButton("bold", FormatBold)}
         {this.renderMarkButton("italic", FormatItalic)}
+        {this.renderBlockButton("heading-one", FormatH1)}
+        {this.renderBlockButton("heading-two", FormatH2)}
+        {this.renderBlockButton("heading-three", FormatH3)}
+        {this.renderBlockButton("block-quote", FormatQuote)}
         {this.renderMarkButton("link", FormatLink)}
-        {this.renderBlockButton("heading-one", "looks_one")}
-        {this.renderBlockButton("heading-two", "looks_two")}
-        {this.renderBlockButton("block-quote", "format_quote")}
-        {this.renderBlockButton("numbered-list", "format_list_numbered")}
-        {this.renderBlockButton("bulleted-list", "format_list_bulleted")}
+        {/* {this.renderBlockButton("numbered-list", "format_list_numbered")}
+        {this.renderBlockButton("bulleted-list", "format_list_bulleted")} */}
         <MenuArrow>
           <Arrow />
         </MenuArrow>
@@ -192,27 +200,29 @@ export default class HoverMenu extends React.Component {
    * @return {Element}
    */
 
-  renderBlockButton = (type, icon) => {
+  renderBlockButton = (type, Image) => {
     let isActive = this.hasBlock(type);
 
-    const { editor } = this.props;
-    const {
-      value: { document, blocks }
-    } = editor;
+    // const { editor } = this.props;
+    // const {
+    //   value: { document, blocks }
+    // } = editor;
 
-    if (["numbered-list", "bulleted-list"].includes(type)) {
-      if (blocks.size > 0) {
-        const parent = document.getParent(blocks.first().key);
-        isActive = this.hasBlock("list-item") && parent && parent.type === type;
-      }
-    }
+    // if (["numbered-list", "bulleted-list"].includes(type)) {
+    //   if (blocks.size > 0) {
+    //     const parent = document.getParent(blocks.first().key);
+    //     isActive = this.hasBlock("list-item") && parent && parent.type === type;
+    //   }
+    // }
 
     return (
       <Button
         active={isActive}
         onMouseDown={event => this.onClickBlock(event, type)}
       >
-        <Icon>{icon}</Icon>
+        <Icon active={isActive}>
+          <Image />
+        </Icon>
       </Button>
     );
   };
@@ -240,47 +250,43 @@ export default class HoverMenu extends React.Component {
 
   onClickBlock = (event, type) => {
     event.preventDefault();
-    console.log(this.props);
     const { editor } = this.props;
-    const { value } = editor;
-    const { document } = value;
+    // const { value } = editor;
+    // const { document } = value;
 
-    console.log(type);
     // Handle everything but list buttons.
     if (type !== "bulleted-list" && type !== "numbered-list") {
-      debugger;
       const isActive = this.hasBlock(type);
-      const isList = this.hasBlock("list-item");
+      // const isList = this.hasBlock("list-item");
 
-      if (isList) {
-        editor
-          .setBlocks(isActive ? DEFAULT_NODE : type)
-          .unwrapBlock("bulleted-list")
-          .unwrapBlock("numbered-list");
-      } else {
-        editor.setBlocks(isActive ? DEFAULT_NODE : type);
-      }
+      // if (isList) {
+      //   editor
+      //     .setBlocks(isActive ? DEFAULT_NODE : type)
+      //     .unwrapBlock("bulleted-list")
+      //     .unwrapBlock("numbered-list");
+      // } else {
+      editor.setBlocks(isActive ? DEFAULT_NODE : type);
+      // }
     } else {
       // Handle the extra wrapping required for list buttons.
-      const isList = this.hasBlock("list-item");
-      const isType = value.blocks.some(block => {
-        return !!document.getClosest(block.key, parent => parent.type === type);
-      });
-
-      if (isList && isType) {
-        editor
-          .setBlocks(DEFAULT_NODE)
-          .unwrapBlock("bulleted-list")
-          .unwrapBlock("numbered-list");
-      } else if (isList) {
-        editor
-          .unwrapBlock(
-            type === "bulleted-list" ? "numbered-list" : "bulleted-list"
-          )
-          .wrapBlock(type);
-      } else {
-        editor.setBlocks("list-item").wrapBlock(type);
-      }
+      // const isList = this.hasBlock("list-item");
+      // const isType = value.blocks.some(block => {
+      //   return !!document.getClosest(block.key, parent => parent.type === type);
+      // });
+      // if (isList && isType) {
+      //   editor
+      //     .setBlocks(DEFAULT_NODE)
+      //     .unwrapBlock("bulleted-list")
+      //     .unwrapBlock("numbered-list");
+      // } else if (isList) {
+      //   editor
+      //     .unwrapBlock(
+      //       type === "bulleted-list" ? "numbered-list" : "bulleted-list"
+      //     )
+      //     .wrapBlock(type);
+      // } else {
+      //   editor.setBlocks("list-item").wrapBlock(type);
+      // }
     }
   };
 }
