@@ -218,6 +218,7 @@ class HoveringMenu extends React.Component {
 
   renderMark = (props, editor, next) => {
     const { children, mark, attributes } = props;
+    debugger;
     switch (mark.type) {
       case "bold":
         return <strong {...attributes}>{children}</strong>;

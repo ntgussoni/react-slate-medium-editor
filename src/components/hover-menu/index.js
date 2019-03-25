@@ -236,7 +236,6 @@ export default class HoverMenu extends React.Component {
 
   onClickMark = (event, type) => {
     event.preventDefault();
-
     const { editor } = this.props;
     editor.toggleMark(type);
   };
