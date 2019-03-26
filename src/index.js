@@ -218,7 +218,6 @@ class HoveringMenu extends React.Component {
 
   renderMark = (props, editor, next) => {
     const { children, mark, attributes } = props;
-    debugger;
     switch (mark.type) {
       case "bold":
         return <strong {...attributes}>{children}</strong>;
@@ -309,9 +308,10 @@ class HoveringMenu extends React.Component {
    * @param {Editor} editor
    */
 
-  onChange = ({ value }) => {
+  onChange = change => {
     const { onChange } = this.props;
-    onChange(value);
+    console.log("CALLING ON CHANGE", change);
+    onChange(change.value);
   };
 }
 
