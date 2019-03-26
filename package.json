@@ -22,8 +22,9 @@
     "deploy": "gh-pages -d example/build"
   },
   "dependencies": {
+    "is-url": "^1.2.4",
     "prop-types": "^15.5.4",
-    "is-url": "^1.2.4"
+    "slate-plain-serializer": "^0.6.36"
   },
   "peerDependencies": {
     "react": "^15.0.0 || ^16.0.0",
