@@ -9,7 +9,14 @@ import { ReactComponent as FormatH1 } from "../../assets/icons/h1.svg";
 import { ReactComponent as FormatH2 } from "../../assets/icons/h2.svg";
 import { ReactComponent as FormatQuote } from "../../assets/icons/highlighter-regular.svg";
 
+import { ReactComponent as AlignCenter } from "../../assets/icons/align_center.svg";
+import { ReactComponent as AlignJustify } from "../../assets/icons/align_justify.svg";
+import { ReactComponent as AlignLeft } from "../../assets/icons/align_left.svg";
+import { ReactComponent as AlignRight } from "../../assets/icons/align_right.svg";
+
 import styled from "styled-components";
+
+import { setData } from "../../helpers";
 /**
  * Define the default node type.
  *
@@ -158,6 +165,12 @@ export default class HoverMenu extends React.Component {
         {this.renderMarkButton("link", FormatLink)}
         {this.renderBlockButton("numbered-list", FormatLink)}
         {this.renderBlockButton("bulleted-list", FormatLink)}
+
+        {this.renderAlignButton("align_left", AlignLeft)}
+        {this.renderAlignButton("align_center", AlignCenter)}
+        {this.renderAlignButton("align_right", AlignRight)}
+        {this.renderAlignButton("align_justify", AlignJustify)}
+
         <MenuArrow>
           <Arrow />
         </MenuArrow>
@@ -182,6 +195,31 @@ export default class HoverMenu extends React.Component {
         reversed
         active={isActive}
         onMouseDown={event => this.onClickMark(event, type)}
+      >
+        <Icon active={isActive}>
+          <Image />
+        </Icon>
+      </Button>
+    );
+  };
+
+  /**
+   * Render a align-toggling toolbar button.
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @return {Element}
+   */
+
+  renderAlignButton = (type, Image) => {
+    let isActive = this.hasBlock(type);
+
+    const { editor } = this.props;
+
+    return (
+      <Button
+        active={isActive}
+        onMouseDown={event => this.onClickAlign(event, type)}
       >
         <Icon active={isActive}>
           <Image />
@@ -223,6 +261,25 @@ export default class HoverMenu extends React.Component {
         </Icon>
       </Button>
     );
+  };
+
+  /**
+   * When an align button is clicked, change the current data value.
+   *
+   * @param {Event} event
+   * @param {String} type
+   */
+
+  onClickAlign = (event, alignment) => {
+    event.preventDefault();
+    const { editor } = this.props;
+    const {
+      value: { blocks }
+    } = editor;
+
+    blocks.forEach(block => {
+      setData(editor, block, { alignment });
+    });
   };
 
   /**

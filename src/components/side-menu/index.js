@@ -1,9 +1,9 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { Editor } from "slate-react";
 import { ReactComponent as ImageIcon } from "../../assets/icons/image-regular.svg";
-
+import ImageUploadButton from "./image-upload-button";
 import { insertImage } from "../../helpers";
 
 import styled, { css } from "styled-components";
@@ -140,7 +140,7 @@ export default class SideMenu extends React.Component {
     this.setState({ ssrDone: true });
   }
 
-  openSideMenu = e => {
+  toggleSideMenu = e => {
     e.preventDefault();
     this.setState(prevState => {
       return { opened: !prevState.opened };
@@ -153,7 +153,7 @@ export default class SideMenu extends React.Component {
    */
 
   render() {
-    const { className, innerRef } = this.props;
+    const { className, innerRef, onFileSelected, editor } = this.props;
     const { opened, ssrDone } = this.state;
 
     if (!ssrDone) {
@@ -164,12 +164,17 @@ export default class SideMenu extends React.Component {
 
     return ReactDOM.createPortal(
       <StyledMenu opened={opened} className={className} ref={innerRef}>
-        <OpenButton opened={opened} onMouseDown={this.openSideMenu}>
+        <OpenButton opened={opened} onMouseDown={this.toggleSideMenu}>
           <Icon>+</Icon>
         </OpenButton>
 
         <ButtonContainer>
-          {this.renderButton("image", ImageIcon, 50, opened)}
+          <ImageUploadButton
+            editor={editor}
+            opened={opened}
+            toggleSideMenu={this.toggleSideMenu}
+            onFileSelected={onFileSelected}
+          />
           {/* {this.renderButton("video", ImageIcon, 150, opened)}
           {this.renderButton("another", ImageIcon, 250, opened)}
           {this.renderButton("bla", ImageIcon, 350, opened)} */}
@@ -201,35 +206,4 @@ export default class SideMenu extends React.Component {
       </Button>
     );
   }
-
-  /**
-   * On clicking the image button, prompt for an image and insert it.
-   *
-   * @param {Event} event
-   */
-
-  onClickImage = event => {
-    const { editor } = this.props;
-
-    event.preventDefault();
-    const src = window.prompt("Enter the URL of the image:");
-    if (!src) return;
-    editor.command(insertImage, src);
-  };
-
-  /**
-   * When a mark button is clicked, toggle the current mark.
-   *
-   * @param {Event} event
-   * @param {String} type
-   */
-
-  onButtonClick = (event, type) => {
-    event.preventDefault();
-
-    switch (type) {
-      case "image":
-        this.onClickImage(event);
-    }
-  };
 }

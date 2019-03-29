@@ -16,3 +16,24 @@ export const insertImage = (editor, src, target) => {
     data: { src }
   });
 };
+
+export const setData = (editor, node, data) => {
+  editor.setNodeByKey(node.key, { data: { ...node.data.toJS(), ...data } });
+};
+
+export const getData = (node, name, defaultValue = {}) => {
+  return node.data.get(name) || defaultValue;
+};
+
+export const getAlignmentStyle = alignment => {
+  switch (alignment) {
+    case "align_right":
+      return { textAlign: "right" };
+    case "align_justify":
+      return { textAlign: "justify" };
+    case "align_center":
+      return { textAlign: "center" };
+    default:
+      return { textAlign: "left" };
+  }
+};
