@@ -6,7 +6,12 @@ import { Editor, getEventRange, getEventTransfer } from "slate-react";
 import isUrl from "is-url";
 import imageExtensions from "./image-extensions";
 
-import { insertImage, getAlignmentStyle, getData } from "./helpers";
+import {
+  insertImage,
+  getAlignmentStyle,
+  getData,
+  DEFAULT_NODE
+} from "./helpers";
 
 import HoverMenu from "./components/hover-menu";
 import SideMenu from "./components/side-menu";
@@ -85,6 +90,23 @@ class HoveringMenu extends React.Component {
     this.updateSideMenu();
   };
 
+  onKeyDown = (event, editor, next) => {
+    const { value } = editor;
+
+    // Soft break, line return if shift pressed
+
+    if (event.key === "Enter") {
+      if (event.shiftKey === true) {
+        editor.insertText("\n");
+        return;
+      }
+
+      return editor.insertBlock(DEFAULT_NODE);
+    }
+
+    return next();
+  };
+
   /**
    * Update the menu's absolute position.
    */
@@ -111,7 +133,7 @@ class HoveringMenu extends React.Component {
       return;
     }
     const topBlock = blocks.get(0);
-    const notAParagraph = topBlock && topBlock.type !== "paragraph";
+    const notAParagraph = topBlock && topBlock.type !== DEFAULT_NODE;
     const notEmptyText =
       texts && texts.get(0) && texts.get(0).text.length !== 0;
 
@@ -146,23 +168,24 @@ class HoveringMenu extends React.Component {
 
     const isImage = focusBlock && focusBlock.type === "image";
 
-    if (selection.isExpanded || isImage) {
-      const native = window.getSelection();
-      const range = native.getRangeAt(0);
-
-      const rect = range.getBoundingClientRect();
-      menu.style.opacity = 1;
-
-      const top = rect.top + window.pageYOffset - menu.offsetHeight;
-      menu.style.top = `${top < 0 ? 0 : top}px`;
-
-      const left =
-        rect.left + window.pageXOffset - menu.offsetWidth / 2 + rect.width / 2;
-
-      menu.style.left = `${left < 0 ? 0 : left}px`;
-    } else {
+    if (!(selection.isFocused && (selection.isExpanded || isImage))) {
       menu.removeAttribute("style");
+      return;
     }
+
+    const native = window.getSelection();
+    const range = native.getRangeAt(0);
+
+    const rect = range.getBoundingClientRect();
+    menu.style.opacity = 1;
+
+    const top = rect.top + window.pageYOffset - menu.offsetHeight;
+    menu.style.top = `${top < 0 ? 0 : top}px`;
+
+    const left =
+      rect.left + window.pageXOffset - menu.offsetWidth / 2 + rect.width / 2;
+
+    menu.style.left = `${left < 0 ? 0 : left}px`;
   };
 
   /**
@@ -172,17 +195,19 @@ class HoveringMenu extends React.Component {
    */
 
   render() {
-    const { value } = this.props;
+    const { value, placeholder, readOnly } = this.props;
 
     return (
       <div>
         <Editor
-          placeholder="Enter some text..."
+          readOnly={readOnly}
+          placeholder={placeholder || "Enter some text..."}
           value={value || Plain.deserialize("")}
           onChange={this.onChange}
           renderEditor={this.renderEditor}
           onDrop={this.onDropOrPaste}
           onPaste={this.onDropOrPaste}
+          onKeyDown={this.onKeyDown}
           renderNode={this.renderNode}
           renderMark={this.renderMark}
           schema={schema}
@@ -271,12 +296,7 @@ class HoveringMenu extends React.Component {
             {children}
           </blockquote>
         );
-      case "bulleted-list":
-        return (
-          <ul {...attributes} style={alignmentStyle}>
-            {children}
-          </ul>
-        );
+
       case "heading-one":
         return (
           <h1 {...attributes} style={alignmentStyle}>
@@ -289,17 +309,23 @@ class HoveringMenu extends React.Component {
             {children}
           </h2>
         );
-      case "list-item":
+      case "bulleted-list":
         return (
-          <li {...attributes} style={alignmentStyle}>
+          <ul {...attributes} style={alignmentStyle}>
             {children}
-          </li>
+          </ul>
         );
       case "numbered-list":
         return (
           <ol {...attributes} style={alignmentStyle}>
             {children}
           </ol>
+        );
+      case "list-item":
+        return (
+          <li {...attributes} style={alignmentStyle}>
+            {children}
+          </li>
         );
       default:
         return next();
@@ -314,37 +340,37 @@ class HoveringMenu extends React.Component {
    * @param {Function} next
    */
 
-  // onDropOrPaste = (event, editor, next) => {
-  //   const target = getEventRange(event, editor);
-  //   if (!target && event.type === "drop") return next();
+  onDropOrPaste = (event, editor, next) => {
+    const target = getEventRange(event, editor);
+    if (!target && event.type === "drop") return next();
 
-  //   const transfer = getEventTransfer(event);
-  //   const { type, text, files } = transfer;
+    const transfer = getEventTransfer(event);
+    const { type, text, files } = transfer;
 
-  //   if (type === "files") {
-  //     for (const file of files) {
-  //       const reader = new FileReader();
-  //       const [mime] = file.type.split("/");
-  //       if (mime !== "image") continue;
+    if (type === "files") {
+      for (const file of files) {
+        const reader = new FileReader();
+        const [mime] = file.type.split("/");
+        if (mime !== "image") continue;
 
-  //       reader.addEventListener("load", () => {
-  //         editor.command(insertImage, reader.result, target);
-  //       });
+        reader.addEventListener("load", () => {
+          editor.command(insertImage, reader.result, target);
+        });
 
-  //       reader.readAsDataURL(file);
-  //     }
-  //     return;
-  //   }
+        reader.readAsDataURL(file);
+      }
+      return;
+    }
 
-  //   if (type === "text") {
-  //     if (!isUrl(text)) return next();
-  //     if (!isImage(text)) return next();
-  //     editor.command(insertImage, text, target);
-  //     return;
-  //   }
+    if (type === "text") {
+      if (!isUrl(text)) return next();
+      if (!isImage(text)) return next();
+      editor.command(insertImage, text, target);
+      return;
+    }
 
-  //   next();
-  // };
+    next();
+  };
 
   /**
    * On change.

@@ -7,7 +7,7 @@ import styled, { css } from "styled-components";
 
 const Button = styled.span`
   cursor: pointer;
-  border: 1px solid #ccc;
+  border: 1px solid #000;
   background: white;
   border-radius: 100%;
 
@@ -45,7 +45,7 @@ const Icon = styled.span`
     height: 17px;
     box-sizing: content-box;
     background-size: cover;
-    color: ${props => (props.active ? "white" : "#aaa")};
+    color: ${props => (props.active ? "#ccc" : "#000")};
   }
 `;
 

@@ -2,12 +2,16 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { Editor } from "slate-react";
+
 import { ReactComponent as FormatBold } from "../../assets/icons/format_bold.svg";
 import { ReactComponent as FormatItalic } from "../../assets/icons/format_italic.svg";
 import { ReactComponent as FormatLink } from "../../assets/icons/format_link.svg";
-import { ReactComponent as FormatH1 } from "../../assets/icons/h1.svg";
-import { ReactComponent as FormatH2 } from "../../assets/icons/h2.svg";
-import { ReactComponent as FormatQuote } from "../../assets/icons/highlighter-regular.svg";
+import { ReactComponent as FormatH1 } from "../../assets/icons/text_large.svg";
+import { ReactComponent as FormatH2 } from "../../assets/icons/text_small.svg";
+import { ReactComponent as FormatQuote } from "../../assets/icons/quote.svg";
+
+import { ReactComponent as FormatList } from "../../assets/icons/list.svg";
+import { ReactComponent as FormatListUl } from "../../assets/icons/list_ul.svg";
 
 import { ReactComponent as AlignCenter } from "../../assets/icons/align_center.svg";
 import { ReactComponent as AlignJustify } from "../../assets/icons/align_justify.svg";
@@ -16,32 +20,39 @@ import { ReactComponent as AlignRight } from "../../assets/icons/align_right.svg
 
 import styled from "styled-components";
 
-import { setData } from "../../helpers";
+import {
+  setData,
+  hasBlock,
+  hasMark,
+  hasAlignment,
+  DEFAULT_NODE
+} from "../../helpers";
 /**
  * Define the default node type.
  *
  * @type {String}
  */
 
-const DEFAULT_NODE = "paragraph";
-
 const Button = styled.span`
   cursor: pointer;
+  padding: 10px 7px 10px 7px;
+
+  &:hover {
+    svg {
+      color: #fff;
+    }
+  }
 `;
 
 const Icon = styled.span`
   font-size: 18px;
-  vertical-align: text-bottom;
+  display: block;
 
   svg {
     height: 17px;
     box-sizing: content-box;
     background-size: cover;
     color: ${props => (props.active ? "white" : "#aaa")};
-
-    &:hover {
-      color: #fff;
-    }
   }
 `;
 
@@ -76,7 +87,8 @@ const Arrow = styled.span`
 `;
 
 const StyledMenu = styled.div`
-  padding: 10px;
+  padding-left: 5px;
+  padding-right: 5px;
   position: absolute;
   z-index: 1;
   top: -10000px;
@@ -90,9 +102,6 @@ const StyledMenu = styled.div`
   & > * {
     display: inline-block;
   }
-  & > * + * {
-    margin-left: 15px;
-  }
 `;
 
 export default class HoverMenu extends React.Component {
@@ -104,34 +113,6 @@ export default class HoverMenu extends React.Component {
 
   state = {
     ssrDone: false
-  };
-
-  /**
-   * Check if the current selection has a mark with `type` in it.
-   *
-   * @param {String} type
-   * @return {Boolean}
-   */
-
-  hasMark = type => {
-    const {
-      editor: { value }
-    } = this.props;
-    return value.activeMarks.some(mark => mark.type === type);
-  };
-
-  /**
-   * Check if the any of the currently selected blocks are of `type`.
-   *
-   * @param {String} type
-   * @return {Boolean}
-   */
-
-  hasBlock = type => {
-    const {
-      editor: { value }
-    } = this.props;
-    return value.blocks.some(node => node.type === type);
   };
 
   /**
@@ -163,8 +144,8 @@ export default class HoverMenu extends React.Component {
         {this.renderBlockButton("heading-two", FormatH2)}
         {this.renderBlockButton("block-quote", FormatQuote)}
         {this.renderMarkButton("link", FormatLink)}
-        {this.renderBlockButton("numbered-list", FormatLink)}
-        {this.renderBlockButton("bulleted-list", FormatLink)}
+        {this.renderBlockButton("numbered-list", FormatList)}
+        {this.renderBlockButton("bulleted-list", FormatListUl)}
 
         {this.renderAlignButton("align_left", AlignLeft)}
         {this.renderAlignButton("align_center", AlignCenter)}
@@ -188,7 +169,8 @@ export default class HoverMenu extends React.Component {
    */
 
   renderMarkButton = (type, Image) => {
-    const isActive = this.hasMark(type);
+    const { editor } = this.props;
+    const isActive = hasMark(editor, type);
 
     return (
       <Button
@@ -212,9 +194,8 @@ export default class HoverMenu extends React.Component {
    */
 
   renderAlignButton = (type, Image) => {
-    let isActive = this.hasBlock(type);
-
     const { editor } = this.props;
+    let isActive = hasAlignment(editor, type);
 
     return (
       <Button
@@ -237,9 +218,9 @@ export default class HoverMenu extends React.Component {
    */
 
   renderBlockButton = (type, Image) => {
-    let isActive = this.hasBlock(type);
-
     const { editor } = this.props;
+    let isActive = hasBlock(editor, type);
+
     const {
       value: { document, blocks }
     } = editor;
@@ -247,7 +228,8 @@ export default class HoverMenu extends React.Component {
     if (["numbered-list", "bulleted-list"].includes(type)) {
       if (blocks.size > 0) {
         const parent = document.getParent(blocks.first().key);
-        isActive = this.hasBlock("list-item") && parent && parent.type === type;
+        isActive =
+          hasBlock(editor, "list-item") && parent && parent.type === type;
       }
     }
 
@@ -311,8 +293,8 @@ export default class HoverMenu extends React.Component {
 
     // Handle everything but list buttons.
     if (type !== "bulleted-list" && type !== "numbered-list") {
-      const isActive = this.hasBlock(type);
-      const isList = this.hasBlock("list-item");
+      const isActive = hasBlock(editor, type);
+      const isList = hasBlock(editor, "list-item");
 
       if (isList) {
         editor
@@ -324,7 +306,7 @@ export default class HoverMenu extends React.Component {
       }
     } else {
       // Handle the extra wrapping required for list buttons.
-      const isList = this.hasBlock("list-item");
+      const isList = hasBlock(editor, "list-item");
       const isType = value.blocks.some(block => {
         return !!document.getClosest(block.key, parent => parent.type === type);
       });

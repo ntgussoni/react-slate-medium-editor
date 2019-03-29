@@ -1,3 +1,5 @@
+export const DEFAULT_NODE = "paragraph";
+
 /**
  * A change function to standardize inserting images.
  *
@@ -36,4 +38,33 @@ export const getAlignmentStyle = alignment => {
     default:
       return { textAlign: "left" };
   }
+};
+
+export const hasAlignment = (editor, alignment) => {
+  const { value } = editor;
+  return value.blocks.some(node => getData(node, "alignment") === alignment);
+};
+
+/**
+ * Check if the current selection has a mark with `type` in it.
+ *
+ * @param {String} type
+ * @return {Boolean}
+ */
+
+export const hasMark = (editor, type) => {
+  const { value } = editor;
+  return value.activeMarks.some(mark => mark.type === type);
+};
+
+/**
+ * Check if the any of the currently selected blocks are of `type`.
+ *
+ * @param {String} type
+ * @return {Boolean}
+ */
+
+export const hasBlock = (editor, type) => {
+  const { value } = editor;
+  return value.blocks.some(node => node.type === type);
 };

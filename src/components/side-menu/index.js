@@ -10,7 +10,7 @@ import styled, { css } from "styled-components";
 
 const Button = styled.span`
   cursor: pointer;
-  border: 1px solid #ccc;
+  border: 1px solid #000;
   background: white;
   border-radius: 100%;
 
@@ -64,8 +64,8 @@ const OpenButton = styled.div`
   width: 30px;
   height: 30px;
   background: white;
-  border: 1px solid #ccc;
-  color: #ccc;
+  border: 1px solid #000;
+  color: #000;
   background: white;
   border-radius: 50%;
   justify-content: center;
