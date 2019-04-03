@@ -3,25 +3,57 @@ import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { Editor } from "slate-react";
 
+import { ReactComponent as FormatBold } from "../../assets/icons/format_bold.svg";
+import { ReactComponent as FormatItalic } from "../../assets/icons/format_italic.svg";
+import { ReactComponent as FormatLink } from "../../assets/icons/format_link.svg";
+import { ReactComponent as FormatH1 } from "../../assets/icons/text_large.svg";
+import { ReactComponent as FormatH2 } from "../../assets/icons/text_small.svg";
+import { ReactComponent as FormatQuote } from "../../assets/icons/quote.svg";
+
+import { ReactComponent as FormatList } from "../../assets/icons/list.svg";
+import { ReactComponent as FormatListUl } from "../../assets/icons/list_ul.svg";
+
+import { ReactComponent as AlignCenter } from "../../assets/icons/align_center.svg";
+import { ReactComponent as AlignJustify } from "../../assets/icons/align_justify.svg";
+import { ReactComponent as AlignLeft } from "../../assets/icons/align_left.svg";
+import { ReactComponent as AlignRight } from "../../assets/icons/align_right.svg";
+
 import styled from "styled-components";
+
+import {
+  setData,
+  hasBlock,
+  hasMark,
+  hasAlignment,
+  DEFAULT_NODE
+} from "../../helpers";
+/**
+ * Define the default node type.
+ *
+ * @type {String}
+ */
 
 const Button = styled.span`
   cursor: pointer;
-  color: ${props =>
-    props.reversed
-      ? props.active
-        ? "white"
-        : "#aaa"
-      : props.active
-      ? "black"
-      : "#ccc"};
+  padding: 10px 7px 10px 7px;
+
+  &:hover {
+    svg {
+      color: #fff;
+    }
+  }
 `;
 
-const Icon = styled(({ className, ...rest }) => {
-  return <span className={`material-icons ${className}`} {...rest} />;
-})`
+const Icon = styled.span`
   font-size: 18px;
-  vertical-align: text-bottom;
+  display: block;
+
+  svg {
+    height: 17px;
+    box-sizing: content-box;
+    background-size: cover;
+    color: ${props => (props.active ? "white" : "#aaa")};
+  }
 `;
 
 /**
@@ -55,7 +87,8 @@ const Arrow = styled.span`
 `;
 
 const StyledMenu = styled.div`
-  padding: 10px;
+  padding-left: 5px;
+  padding-right: 5px;
   position: absolute;
   z-index: 1;
   top: -10000px;
@@ -69,9 +102,6 @@ const StyledMenu = styled.div`
   & > * {
     display: inline-block;
   }
-  & > * + * {
-    margin-left: 15px;
-  }
 `;
 
 export default class HoverMenu extends React.Component {
@@ -80,22 +110,48 @@ export default class HoverMenu extends React.Component {
     className: PropTypes.string,
     innerRef: PropTypes.node
   };
+
+  state = {
+    ssrDone: false
+  };
+
   /**
    * Render.
    *
    * @return {Element}
    */
 
+  componentDidMount() {
+    this.setState({ ssrDone: true });
+  }
+
   render() {
     const { className, innerRef } = this.props;
-    const root = window.document.getElementById("root");
+    const { ssrDone } = this.state;
+
+    // To prevent errors on SSR due to window not being available
+    if (!ssrDone) {
+      return null;
+    }
+
+    const root = window.document.getElementsByTagName("body")[0];
 
     return ReactDOM.createPortal(
       <StyledMenu className={className} ref={innerRef}>
-        {this.renderMarkButton("bold", "format_bold")}
-        {this.renderMarkButton("italic", "format_italic")}
-        {this.renderMarkButton("underlined", "format_underlined")}
-        {this.renderMarkButton("code", "code")}
+        {this.renderMarkButton("bold", FormatBold)}
+        {this.renderMarkButton("italic", FormatItalic)}
+        {this.renderBlockButton("heading-one", FormatH1)}
+        {this.renderBlockButton("heading-two", FormatH2)}
+        {this.renderBlockButton("block-quote", FormatQuote)}
+        {this.renderMarkButton("link", FormatLink)}
+        {this.renderBlockButton("numbered-list", FormatList)}
+        {this.renderBlockButton("bulleted-list", FormatListUl)}
+
+        {this.renderAlignButton("align_left", AlignLeft)}
+        {this.renderAlignButton("align_center", AlignCenter)}
+        {this.renderAlignButton("align_right", AlignRight)}
+        {this.renderAlignButton("align_justify", AlignJustify)}
+
         <MenuArrow>
           <Arrow />
         </MenuArrow>
@@ -112,20 +168,101 @@ export default class HoverMenu extends React.Component {
    * @return {Element}
    */
 
-  renderMarkButton(type, icon) {
+  renderMarkButton = (type, Image) => {
     const { editor } = this.props;
-    const { value } = editor;
-    const isActive = value.activeMarks.some(mark => mark.type === type);
+    const isActive = hasMark(editor, type);
+
     return (
       <Button
         reversed
         active={isActive}
         onMouseDown={event => this.onClickMark(event, type)}
       >
-        <Icon>{icon}</Icon>
+        <Icon active={isActive}>
+          <Image />
+        </Icon>
       </Button>
     );
-  }
+  };
+
+  /**
+   * Render a align-toggling toolbar button.
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @return {Element}
+   */
+
+  renderAlignButton = (type, Image) => {
+    const { editor } = this.props;
+    let isActive = hasAlignment(editor, type);
+
+    return (
+      <Button
+        active={isActive}
+        onMouseDown={event => this.onClickAlign(event, type)}
+      >
+        <Icon active={isActive}>
+          <Image />
+        </Icon>
+      </Button>
+    );
+  };
+
+  /**
+   * Render a block-toggling toolbar button.
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @return {Element}
+   */
+
+  renderBlockButton = (type, Image) => {
+    const { editor } = this.props;
+    let isActive = hasBlock(editor, type);
+
+    const {
+      value: { document, blocks }
+    } = editor;
+
+    if (["numbered-list", "bulleted-list"].includes(type)) {
+      if (blocks.size > 0) {
+        const parent = document.getParent(blocks.first().key);
+        isActive =
+          hasBlock(editor, "list-item") && parent && parent.type === type;
+      }
+    }
+
+    return (
+      <Button
+        active={isActive}
+        onMouseDown={event => this.onClickBlock(event, type)}
+      >
+        <Icon active={isActive}>
+          <Image />
+        </Icon>
+      </Button>
+    );
+  };
+
+  /**
+   * When an align button is clicked, change the current data value.
+   *
+   * @param {Event} event
+   * @param {String} type
+   */
+
+  onClickAlign = (event, alignment) => {
+    event.preventDefault();
+    const { editor } = this.props;
+    const {
+      value: { blocks }
+    } = editor;
+
+    blocks.forEach(block => {
+      setData(editor, block, { alignment });
+    });
+  };
 
   /**
    * When a mark button is clicked, toggle the current mark.
@@ -134,9 +271,59 @@ export default class HoverMenu extends React.Component {
    * @param {String} type
    */
 
-  onClickMark(event, type) {
-    const { editor } = this.props;
+  onClickMark = (event, type) => {
     event.preventDefault();
+    const { editor } = this.props;
     editor.toggleMark(type);
-  }
+    console.log("TOGGLE MARK");
+  };
+
+  /**
+   * When a block button is clicked, toggle the block type.
+   *
+   * @param {Event} event
+   * @param {String} type
+   */
+
+  onClickBlock = (event, type) => {
+    event.preventDefault();
+    const { editor } = this.props;
+    const { value } = editor;
+    const { document } = value;
+
+    // Handle everything but list buttons.
+    if (type !== "bulleted-list" && type !== "numbered-list") {
+      const isActive = hasBlock(editor, type);
+      const isList = hasBlock(editor, "list-item");
+
+      if (isList) {
+        editor
+          .setBlocks(isActive ? DEFAULT_NODE : type)
+          .unwrapBlock("bulleted-list")
+          .unwrapBlock("numbered-list");
+      } else {
+        editor.setBlocks(isActive ? DEFAULT_NODE : type);
+      }
+    } else {
+      // Handle the extra wrapping required for list buttons.
+      const isList = hasBlock(editor, "list-item");
+      const isType = value.blocks.some(block => {
+        return !!document.getClosest(block.key, parent => parent.type === type);
+      });
+      if (isList && isType) {
+        editor
+          .setBlocks(DEFAULT_NODE)
+          .unwrapBlock("bulleted-list")
+          .unwrapBlock("numbered-list");
+      } else if (isList) {
+        editor
+          .unwrapBlock(
+            type === "bulleted-list" ? "numbered-list" : "bulleted-list"
+          )
+          .wrapBlock(type);
+      } else {
+        editor.setBlocks("list-item").wrapBlock(type);
+      }
+    }
+  };
 }

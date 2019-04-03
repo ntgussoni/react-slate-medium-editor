@@ -1,9 +1,17 @@
 import React from "react";
 import styled from "styled-components";
-import { Block } from "slate";
+import Plain from "slate-plain-serializer";
+import { Block, Value, KeyUtils } from "slate";
 import { Editor, getEventRange, getEventTransfer } from "slate-react";
 import isUrl from "is-url";
 import imageExtensions from "./image-extensions";
+
+import {
+  insertImage,
+  getAlignmentStyle,
+  getData,
+  DEFAULT_NODE
+} from "./helpers";
 
 import HoverMenu from "./components/hover-menu";
 import SideMenu from "./components/side-menu";
@@ -17,7 +25,6 @@ import SideMenu from "./components/side-menu";
 const Image = styled.img`
   display: block;
   max-width: 100%;
-  max-height: 20em;
   box-shadow: ${props => (props.selected ? "0 0 0 2px blue;" : "none")};
 `;
 
@@ -29,27 +36,7 @@ const Image = styled.img`
  */
 
 function isImage(url) {
-  console.log(url);
   return !!imageExtensions.find(url.endsWith);
-}
-
-/**
- * A change function to standardize inserting images.
- *
- * @param {Editor} editor
- * @param {String} src
- * @param {Range} target
- */
-
-function insertImage(editor, src, target) {
-  if (target) {
-    editor.select(target);
-  }
-
-  editor.insertBlock({
-    type: "image",
-    data: { src }
-  });
 }
 
 /**
@@ -82,8 +69,7 @@ const schema = {
  *
  * @type {Component}
  */
-
-class HoveringMenu extends React.Component {
+export default class ReactSlateMediumEditor extends React.Component {
   /**
    * On update, update the menu.
    */
@@ -98,6 +84,23 @@ class HoveringMenu extends React.Component {
     this.updateSideMenu();
   };
 
+  onKeyDown = (event, editor, next) => {
+    const { value } = editor;
+
+    // Soft break, line return if shift pressed
+
+    if (event.key === "Enter") {
+      if (event.shiftKey === true) {
+        editor.insertText("\n");
+        return;
+      }
+
+      return editor.insertBlock(DEFAULT_NODE);
+    }
+
+    return next();
+  };
+
   /**
    * Update the menu's absolute position.
    */
@@ -107,7 +110,10 @@ class HoveringMenu extends React.Component {
     if (!sideMenu) return;
 
     const { value } = this.props;
-    const { selection, texts } = value;
+    const { selection, blocks, texts } = value;
+
+    if (!value) return;
+    if (!selection) return;
 
     if (selection.isBlurred || !selection.isCollapsed) {
       sideMenu.removeAttribute("style");
@@ -120,8 +126,12 @@ class HoveringMenu extends React.Component {
       sideMenu.removeAttribute("style");
       return;
     }
+    const topBlock = blocks.get(0);
+    const notAParagraph = topBlock && topBlock.type !== DEFAULT_NODE;
+    const notEmptyText =
+      texts && texts.get(0) && texts.get(0).text.length !== 0;
 
-    if (texts && texts.get(0) && texts.get(0).text.length !== 0) {
+    if (notAParagraph || notEmptyText) {
       sideMenu.removeAttribute("style");
       return;
     }
@@ -130,10 +140,10 @@ class HoveringMenu extends React.Component {
     const rect = range.getBoundingClientRect();
     sideMenu.style.opacity = 1;
 
-    const top = rect.top + window.pageYOffset - 10;
+    const top = rect.top + window.pageYOffset - (15 - rect.height / 2);
     sideMenu.style.top = `${top}px`;
 
-    const left = rect.left - sideMenu.offsetWidth;
+    const left = rect.left;
     sideMenu.style.left = `${left}px`;
   };
 
@@ -146,15 +156,20 @@ class HoveringMenu extends React.Component {
     if (!menu) return;
 
     const { value } = this.props;
-    const { fragment, selection } = value;
 
-    if (selection.isBlurred || selection.isCollapsed || fragment.text === "") {
+    if (!value) return;
+    const { fragment, selection, focusBlock } = value;
+
+    const isImage = focusBlock && focusBlock.type === "image";
+
+    if (!(selection.isFocused && (selection.isExpanded || isImage))) {
       menu.removeAttribute("style");
       return;
     }
 
     const native = window.getSelection();
     const range = native.getRangeAt(0);
+
     const rect = range.getBoundingClientRect();
     menu.style.opacity = 1;
 
@@ -174,20 +189,22 @@ class HoveringMenu extends React.Component {
    */
 
   render() {
-    const { value } = this.props;
+    const { value, placeholder, readOnly } = this.props;
 
     return (
       <div>
         <Editor
-          placeholder="Enter some text..."
-          value={value}
+          readOnly={readOnly}
+          placeholder={placeholder || "Enter some text..."}
+          value={value || Plain.deserialize("")}
           onChange={this.onChange}
           renderEditor={this.renderEditor}
-          renderMark={this.renderMark}
-          schema={schema}
           onDrop={this.onDropOrPaste}
           onPaste={this.onDropOrPaste}
+          onKeyDown={this.onKeyDown}
           renderNode={this.renderNode}
+          renderMark={this.renderMark}
+          schema={schema}
         />
       </div>
     );
@@ -210,6 +227,7 @@ class HoveringMenu extends React.Component {
         <SideMenu
           innerRef={sideMenu => (this.sideMenu = sideMenu)}
           editor={editor}
+          onFileSelected={() => {}}
         />
       </React.Fragment>
     );
@@ -226,16 +244,11 @@ class HoveringMenu extends React.Component {
 
   renderMark = (props, editor, next) => {
     const { children, mark, attributes } = props;
-
     switch (mark.type) {
       case "bold":
         return <strong {...attributes}>{children}</strong>;
-      case "code":
-        return <code {...attributes}>{children}</code>;
       case "italic":
         return <em {...attributes}>{children}</em>;
-      case "underlined":
-        return <u {...attributes}>{children}</u>;
       default:
         return next();
     }
@@ -249,17 +262,67 @@ class HoveringMenu extends React.Component {
    */
 
   renderNode = (props, editor, next) => {
-    const { attributes, node, isFocused } = props;
+    const { attributes, node, children, isFocused } = props;
+
+    const alignmentStyle = getAlignmentStyle(getData(node, "alignment"));
 
     switch (node.type) {
       case "image": {
         const src = node.data.get("src");
-        return <Image src={src} selected={isFocused} {...attributes} />;
+        return (
+          <Image
+            {...attributes}
+            style={alignmentStyle}
+            src={src}
+            selected={isFocused}
+          />
+        );
       }
+      case "paragraph":
+        return (
+          <p {...attributes} style={alignmentStyle}>
+            {children}
+          </p>
+        );
+      case "block-quote":
+        return (
+          <blockquote {...attributes} style={alignmentStyle}>
+            {children}
+          </blockquote>
+        );
 
-      default: {
+      case "heading-one":
+        return (
+          <h1 {...attributes} style={alignmentStyle}>
+            {children}
+          </h1>
+        );
+      case "heading-two":
+        return (
+          <h2 {...attributes} style={alignmentStyle}>
+            {children}
+          </h2>
+        );
+      case "bulleted-list":
+        return (
+          <ul {...attributes} style={alignmentStyle}>
+            {children}
+          </ul>
+        );
+      case "numbered-list":
+        return (
+          <ol {...attributes} style={alignmentStyle}>
+            {children}
+          </ol>
+        );
+      case "list-item":
+        return (
+          <li {...attributes} style={alignmentStyle}>
+            {children}
+          </li>
+        );
+      default:
         return next();
-      }
     }
   };
 
@@ -309,14 +372,11 @@ class HoveringMenu extends React.Component {
    * @param {Editor} editor
    */
 
-  onChange = ({ value }) => {
+  onChange = change => {
     const { onChange } = this.props;
-    onChange(value);
+    console.log("CALLING ON CHANGE", change);
+    onChange(change.value);
   };
 }
 
-/**
- * Export.
- */
-
-export default HoveringMenu;
+export { Value, KeyUtils };

@@ -1,30 +1,56 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { Editor } from "slate-react";
+import { ReactComponent as ImageIcon } from "../../assets/icons/image-regular.svg";
+import ImageUploadButton from "./image-upload-button";
+import { insertImage } from "../../helpers";
 
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 const Button = styled.span`
   cursor: pointer;
-  color: #ccc;
-  transform: scale(1);
+  border: 1px solid #000;
+  background: white;
   border-radius: 100%;
-  transition-delay: ${props => props.delay}ms !important;
+
+  ${props =>
+    props.opened &&
+    css`
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+      transition-duration: ${props => props.delay}ms;
+      transition-timing-function: ease-in;
+    `}
+  ${props =>
+    !props.opened &&
+    css`
+      transform: scale(0) rotate(-45deg);
+      opacity: 0;
+      transition-duration: ${props => props.delay}ms;
+      transition-timing-function: ease-in;
+    `}
+
+  &:hover {
+    svg {
+      color: #ccc;
+    }
+  }
 `;
 
-const Icon = styled(({ className, ...rest }) => {
-  return <span className={`material-icons ${className}`} {...rest} />;
-})`
-  font-size: 18px;
+const Icon = styled.span`
   vertical-align: text-bottom;
-`;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-/**
- * The hovering menu.
- *
- * @type {Component}
- */
+  svg {
+    height: 17px;
+    box-sizing: content-box;
+    background-size: cover;
+    color: ${props => (props.active ? "white" : "#aaa")};
+  }
+`;
 
 /**
  * Give the menu some styles.
@@ -33,40 +59,72 @@ const Icon = styled(({ className, ...rest }) => {
  */
 
 const OpenButton = styled.div`
-  width: 34px;
-  height: 34px;
-  line-height: 34px;
-  font-size: 34px;
+  cursor: pointer;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  background: white;
+  border: 1px solid #000;
+  color: #000;
+  background: white;
+  border-radius: 50%;
+  justify-content: center;
+
+  ${props =>
+    props.opened &&
+    css`
+      -webkit-transition: -webkit-transform 250ms;
+      transition: -webkit-transform 250ms;
+      transition: transform 250ms;
+      transition: transform 250ms, -webkit-transform 250ms;
+      -webkit-transform: rotate(45deg);
+      transform: rotate(45deg);
+    `}
+
+  ${props =>
+    !props.opened &&
+    css`
+      -webkit-transform: rotate(0);
+      transform: rotate(0);
+      -webkit-transition: -webkit-transform 0.1s;
+      transition: -webkit-transform 0.1s;
+      transition: transform 0.1s;
+      transition: transform 0.1s, -webkit-transform 0.1s;
+    `}
+
+
+  > span {
+    font-size: 24px;
+    line-height: 24px;
+  }
 `;
 
 const ButtonContainer = styled.div`
-  display: block;
-  position: absolute;
-  height: 100%;
+  display: flex;
+  transform: scale(1);
+  padding-left: 20px;
+
+  > span {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    margin-left: 10px;
+  }
 `;
 
 const StyledMenu = styled.div`
-  padding: 10px;
+  display: flex;
   position: absolute;
   z-index: 1;
   top: -10000px;
   left: -10000px;
-  margin-top: -6px;
-  opacity: 0;
-  border-radius: 4px;
-  display: block;
-
-  transition: opacity 0.75s;
-
-  & > * {
-    display: inline-block;
-  }
-  & > * + * {
-    margin-left: 15px;
-  }
+  margin-left: -40px;
 `;
 
-export default class HoverMenu extends React.Component {
+export default class SideMenu extends React.Component {
   static propTypes = {
     editor: PropTypes.instanceOf(Editor),
     className: PropTypes.string,
@@ -74,7 +132,19 @@ export default class HoverMenu extends React.Component {
   };
 
   state = {
-    opened: true
+    opened: false,
+    ssrDone: false
+  };
+
+  componentDidMount() {
+    this.setState({ ssrDone: true });
+  }
+
+  toggleSideMenu = e => {
+    e.preventDefault();
+    this.setState(prevState => {
+      return { opened: !prevState.opened };
+    });
   };
   /**
    * Render.
@@ -83,30 +153,32 @@ export default class HoverMenu extends React.Component {
    */
 
   render() {
-    const { className, innerRef } = this.props;
-    const { opened } = this.state;
-    const root = window.document.getElementById("root");
+    const { className, innerRef, onFileSelected, editor } = this.props;
+    const { opened, ssrDone } = this.state;
+
+    if (!ssrDone) {
+      return null;
+    }
+
+    const root = window.document.getElementsByTagName("body")[0];
 
     return ReactDOM.createPortal(
-      <StyledMenu className={className} ref={innerRef}>
-        <OpenButton
-          onMouseDown={() =>
-            this.setState(prevState => {
-              return { opened: !prevState.opened };
-            })
-          }
-        >
-          {opened ? "-" : "+"}
+      <StyledMenu opened={opened} className={className} ref={innerRef}>
+        <OpenButton opened={opened} onMouseDown={this.toggleSideMenu}>
+          <Icon>+</Icon>
         </OpenButton>
 
-        {opened ? (
-          <ButtonContainer>
-            {this.renderMarkButton("image", "image", 0)}
-            {this.renderMarkButton("image", "video", 30)}
-            {this.renderMarkButton("another", "another", 60)}
-            {this.renderMarkButton("bla", "bla", 90)}
-          </ButtonContainer>
-        ) : null}
+        <ButtonContainer>
+          <ImageUploadButton
+            editor={editor}
+            opened={opened}
+            toggleSideMenu={this.toggleSideMenu}
+            onFileSelected={onFileSelected}
+          />
+          {/* {this.renderButton("video", ImageIcon, 150, opened)}
+          {this.renderButton("another", ImageIcon, 250, opened)}
+          {this.renderButton("bla", ImageIcon, 350, opened)} */}
+        </ButtonContainer>
       </StyledMenu>,
       root
     );
@@ -120,30 +192,18 @@ export default class HoverMenu extends React.Component {
    * @return {Element}
    */
 
-  renderMarkButton(type, icon, delay) {
-    const { editor } = this.props;
-    const { value } = editor;
+  renderButton(type, Image, delay, opened) {
     return (
       <Button
         delay={delay}
+        opened={opened}
         reversed
-        onMouseDown={event => this.onClickMark(event, type)}
+        onMouseDown={event => this.onButtonClick(event, type)}
       >
-        <Icon>{icon}</Icon>
+        <Icon>
+          <Image />
+        </Icon>
       </Button>
     );
-  }
-
-  /**
-   * When a mark button is clicked, toggle the current mark.
-   *
-   * @param {Event} event
-   * @param {String} type
-   */
-
-  onClickMark(event, type) {
-    const { editor } = this.props;
-    event.preventDefault();
-    editor.toggleMark(type);
   }
 }
