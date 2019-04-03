@@ -1,15 +1,18 @@
 import React, { Component } from "react";
-import { Value } from "slate";
 
 import initialValue from "./initial-value.json";
 
-import ExampleComponent from "react-slate-medium-editor";
+import ExampleComponent, { Value, KeyUtils } from "react-slate-medium-editor";
 
 export default class App extends Component {
-  state = {
-    value: Value.fromJSON(initialValue),
-    value2: Value.fromJSON(initialValue)
-  };
+  constructor(props) {
+    super(props);
+    KeyUtils.resetGenerator(); // This is for SSR
+    this.state = {
+      value: Value.fromJSON(initialValue),
+      value2: Value.fromJSON(initialValue)
+    };
+  }
 
   onChange = value => {
     this.setState({ value });

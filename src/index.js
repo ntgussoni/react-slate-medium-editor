@@ -69,13 +69,7 @@ const schema = {
  *
  * @type {Component}
  */
-
-class HoveringMenu extends React.Component {
-  constructor(props) {
-    super(props);
-    KeyUtils.resetGenerator();
-  }
-
+export default class ReactSlateMediumEditor extends React.Component {
   /**
    * On update, update the menu.
    */
@@ -385,8 +379,4 @@ class HoveringMenu extends React.Component {
   };
 }
 
-/**
- * Export.
- */
-
-export default HoveringMenu;
+export { Value, KeyUtils };
