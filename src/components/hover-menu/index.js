@@ -1,7 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
-import { Editor } from "slate-react";
 
 import { ReactComponent as FormatBold } from "../../assets/icons/format_bold.svg";
 import { ReactComponent as FormatItalic } from "../../assets/icons/format_italic.svg";
@@ -105,12 +103,6 @@ const StyledMenu = styled.div`
 `;
 
 export default class HoverMenu extends React.Component {
-  static propTypes = {
-    editor: PropTypes.instanceOf(Editor),
-    className: PropTypes.string,
-    innerRef: PropTypes.node
-  };
-
   state = {
     ssrDone: false
   };

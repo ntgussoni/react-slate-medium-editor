@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "is-url": "^1.2.4",
-    "prop-types": "^15.5.4",
     "slate-plain-serializer": "^0.6.36",
     "immutable": "^4.0.0-rc.12",
     "slate": "^0.44.10",

@@ -2,7 +2,23 @@ import React, { Component } from "react";
 
 import initialValue from "./initial-value.json";
 
-import ExampleComponent, { Value, KeyUtils } from "react-slate-medium-editor";
+import {
+  ReactSlateMediumEditor,
+  Value,
+  KeyUtils
+} from "react-slate-medium-editor";
+
+const Bold = ({ children, ...rest }) => (
+  <strong style={{ color: "blue" }} {...rest}>
+    {children}
+  </strong>
+);
+
+const Italic = ({ children, ...rest }) => (
+  <i style={{ color: "red" }} {...rest}>
+    {children}
+  </i>
+);
 
 export default class App extends Component {
   constructor(props) {
@@ -35,7 +51,14 @@ export default class App extends Component {
             width: "50%"
           }}
         >
-          <ExampleComponent onChange={this.onChange} value={value} />
+          <ReactSlateMediumEditor
+            onChange={this.onChange}
+            value={value}
+            components={{
+              bold: Bold,
+              italic: Italic
+            }}
+          />
         </div>
         <div
           style={{
@@ -45,7 +68,7 @@ export default class App extends Component {
             width: "50%"
           }}
         >
-          <ExampleComponent onChange={this.onChange2} value={value2} />
+          <ReactSlateMediumEditor onChange={this.onChange2} value={value2} />
         </div>
       </div>
     );
