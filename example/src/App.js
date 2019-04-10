@@ -9,13 +9,13 @@ import {
 } from "react-slate-medium-editor";
 
 const Bold = ({ children, ...rest }) => (
-  <strong style={{ color: "blue" }} {...rest}>
+  <strong style={{ fontWeight: "bold" }} {...rest}>
     {children}
   </strong>
 );
 
 const Italic = ({ children, ...rest }) => (
-  <i style={{ color: "red" }} {...rest}>
+  <i style={{ fontStyle: "italic" }} {...rest}>
     {children}
   </i>
 );
@@ -60,7 +60,7 @@ export default class App extends Component {
             }}
           />
         </div>
-        <div
+        {/* <div
           style={{
             margin: "0 auto",
             marginTop: "100px",
@@ -69,7 +69,7 @@ export default class App extends Component {
           }}
         >
           <ReactSlateMediumEditor onChange={this.onChange2} value={value2} />
-        </div>
+        </div> */}
       </div>
     );
   }
