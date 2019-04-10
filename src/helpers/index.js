@@ -19,6 +19,19 @@ export const insertImage = (editor, src, target) => {
   });
 };
 
+export const wrapLink = (editor, href) => {
+  editor.wrapInline({
+    type: "link",
+    data: { href }
+  });
+
+  editor.moveToEnd();
+};
+
+export const unwrapLink = editor => {
+  editor.unwrapInline("link");
+};
+
 export const setData = (editor, node, data) => {
   editor.setNodeByKey(node.key, { data: { ...node.data.toJS(), ...data } });
 };
@@ -38,6 +51,11 @@ export const getAlignmentStyle = alignment => {
     default:
       return { textAlign: "left" };
   }
+};
+
+export const hasLinks = editor => {
+  const { value } = editor;
+  return value.inlines.some(inline => inline.type === "link");
 };
 
 export const hasAlignment = (editor, alignment) => {
