@@ -67,7 +67,14 @@ const schema = {
 const DEFAULT_COMPONENTS = {
   italic: "i",
   bold: "strong",
-  image: "img",
+  image: ({ data, children, ...props }) => (
+    <Image src={data.get("src")} {...props} />
+  ),
+  link: ({ children, data, ...props }) => (
+    <a href={data.get("href")} {...props}>
+      {children}
+    </a>
+  ),
   paragraph: "p",
   "block-quote": "blockquote",
   "heading-one": "h1",
@@ -83,13 +90,23 @@ const DEFAULT_COMPONENTS = {
  * @type {Component}
  */
 export default class ReactSlateMediumEditor extends React.Component {
+  state = {
+    showLinkInput: false
+  };
   /**
    * On update, update the menu.
    */
 
   componentDidMount = () => {
-    this.updateMenu();
-    this.updateSideMenu();
+    // this.updateMenu();
+    // this.updateSideMenu();
+
+    if (window) {
+      window.addEventListener("resize", () => {
+        this.scheduleReposition();
+        this.updateSideMenu();
+      });
+    }
   };
 
   componentDidUpdate = () => {
@@ -97,22 +114,28 @@ export default class ReactSlateMediumEditor extends React.Component {
     this.updateSideMenu();
   };
 
-  onKeyDown = (event, editor, next) => {
-    const { value } = editor;
-
-    // Soft break, line return if shift pressed
-
-    if (event.key === "Enter") {
-      if (event.shiftKey === true) {
-        editor.insertText("\n");
-        return;
-      }
-
-      return editor.insertBlock(DEFAULT_NODE);
+  componentWillUnmount = () => {
+    if (window) {
+      window.removeEventListener("resize");
     }
-
-    return next();
   };
+
+  // onKeyDown = (event, editor, next) => {
+  //   const { value } = editor;
+
+  //   // Soft break, line return if shift pressed
+
+  //   if (event.key === "Enter") {
+  //     if (event.shiftKey === true) {
+  //       editor.insertText("\n");
+  //       return;
+  //     }
+
+  //     return editor.insertBlock(DEFAULT_NODE);
+  //   }
+
+  //   return next();
+  // };
 
   /**
    * Update the menu's absolute position.
@@ -128,7 +151,7 @@ export default class ReactSlateMediumEditor extends React.Component {
     if (!value) return;
     if (!selection) return;
 
-    if (selection.isBlurred || !selection.isCollapsed) {
+    if (selection.isBlurred || selection.isExpanded) {
       sideMenu.removeAttribute("style");
       return;
     }
@@ -149,50 +172,71 @@ export default class ReactSlateMediumEditor extends React.Component {
       return;
     }
 
-    const range = native.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    sideMenu.style.opacity = 1;
-
+    const rect = window
+      .getSelection()
+      .getRangeAt(0)
+      .getBoundingClientRect();
     const top = rect.top + window.pageYOffset - (15 - rect.height / 2);
-    sideMenu.style.top = `${top}px`;
-
     const left = rect.left;
+
+    sideMenu.style.opacity = 1;
+    sideMenu.style.top = `${top}px`;
     sideMenu.style.left = `${left}px`;
   };
 
+  toggleLinkVisibility = () => {
+    this.setState(prevState => {
+      return { showLinkInput: !prevState.showLinkInput };
+    }, this.updateMenu());
+  };
+
+  scheduleReposition = () => {
+    setTimeout(() => {
+      return this.repositionMenu();
+    }, 0);
+  };
   /**
    * Update the menu's absolute position.
    */
 
-  updateMenu = () => {
+  repositionMenu = () => {
     const menu = this.menu;
-    if (!menu) return;
+    const rect = window
+      .getSelection()
+      .getRangeAt(0)
+      .getBoundingClientRect();
 
-    const { value } = this.props;
-
-    if (!value) return;
-    const { fragment, selection, focusBlock } = value;
-
-    const isImage = focusBlock && focusBlock.type === "image";
-
-    if (!(selection.isFocused && (selection.isExpanded || isImage))) {
-      menu.removeAttribute("style");
+    // This is a fix for the link doing weird things
+    if (rect.top === 0 && rect.left === 0) {
       return;
     }
 
-    const native = window.getSelection();
-    const range = native.getRangeAt(0);
-
-    const rect = range.getBoundingClientRect();
-    menu.style.opacity = 1;
-
     const top = rect.top + window.pageYOffset - menu.offsetHeight;
-    menu.style.top = `${top < 0 ? 0 : top}px`;
-
     const left =
       rect.left + window.pageXOffset - menu.offsetWidth / 2 + rect.width / 2;
 
+    menu.style.opacity = 1;
+    menu.style.top = `${top < 0 ? 0 : top}px`;
     menu.style.left = `${left < 0 ? 0 : left}px`;
+  };
+
+  updateMenu = () => {
+    const { value } = this.props;
+    const { showLinkInput } = this.state;
+    const { fragment, selection, focusBlock } = value;
+    const menu = this.menu;
+    if (!menu) return;
+    if (!value) return;
+
+    const isImage = focusBlock && focusBlock.type === "image";
+    const isText = selection.isExpanded && fragment.text !== "";
+    const textOrImageSelected = selection.isFocused && (isText || isImage);
+    console.log(selection, textOrImageSelected, showLinkInput);
+    if (textOrImageSelected || showLinkInput) {
+      this.repositionMenu();
+    } else {
+      menu.removeAttribute("style");
+    }
   };
 
   /**
@@ -212,9 +256,10 @@ export default class ReactSlateMediumEditor extends React.Component {
           value={value || Plain.deserialize("")}
           onChange={this.onChange}
           renderEditor={this.renderEditor}
+          ref={ref => (this.editor = ref)}
           onDrop={this.onDropOrPaste}
           onPaste={this.onDropOrPaste}
-          onKeyDown={this.onKeyDown}
+          // onKeyDown={this.onKeyDown}
           renderNode={this.renderNode}
           renderMark={this.renderMark}
           schema={schema}
@@ -236,7 +281,12 @@ export default class ReactSlateMediumEditor extends React.Component {
     return (
       <React.Fragment>
         {children}
-        <HoverMenu innerRef={menu => (this.menu = menu)} editor={editor} />
+        <HoverMenu
+          innerRef={menu => (this.menu = menu)}
+          onToggleLinkVisibility={this.toggleLinkVisibility}
+          onMenuReposition={this.scheduleReposition}
+          editor={editor}
+        />
         <SideMenu
           innerRef={sideMenu => (this.sideMenu = sideMenu)}
           editor={editor}
@@ -261,12 +311,6 @@ export default class ReactSlateMediumEditor extends React.Component {
 
     const Component = components[mark.type] || DEFAULT_COMPONENTS[mark.type];
 
-    console.log(
-      mark.type,
-      components,
-      components[mark.type],
-      DEFAULT_COMPONENTS[mark.type]
-    );
     if (!Component) {
       return next();
     }
@@ -291,20 +335,13 @@ export default class ReactSlateMediumEditor extends React.Component {
       return next();
     }
 
-    if (node.type === "image") {
-      const src = node.data.get("src");
-      return (
-        <Component
-          {...attributes}
-          style={alignmentStyle}
-          src={src}
-          selected={isFocused}
-        />
-      );
-    }
-
     return (
-      <Component {...attributes} style={alignmentStyle}>
+      <Component
+        {...attributes}
+        data={node.data}
+        selected={isFocused}
+        style={alignmentStyle}
+      >
         {children}
       </Component>
     );
@@ -358,7 +395,7 @@ export default class ReactSlateMediumEditor extends React.Component {
 
   onChange = change => {
     const { onChange } = this.props;
-    console.log("CALLING ON CHANGE", change);
+    console.log("CHANGED", change);
     onChange(change.value);
   };
 }

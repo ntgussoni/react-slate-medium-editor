@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactDOM from "react-dom";
 
 import { ReactComponent as FormatBold } from "../../assets/icons/format_bold.svg";
@@ -22,7 +22,10 @@ import {
   setData,
   hasBlock,
   hasMark,
+  hasLinks,
   hasAlignment,
+  wrapLink,
+  unwrapLink,
   DEFAULT_NODE
 } from "../../helpers";
 /**
@@ -75,6 +78,30 @@ const MenuArrow = styled.div`
   margin-left: -10px !important;
 `;
 
+const HelperInput = styled.input`
+  display: block;
+  margin: 10px;
+  width: 160px;
+  background: none;
+  color: #fff;
+  padding: 3px;
+  border: none;
+  caret-color: #fff;
+  outline: none;
+
+  &::placeholder {
+    color: #e3e3e3;
+  }
+`;
+
+const HelperCloseButton = styled.button`
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+`;
+
 const Arrow = styled.span`
   display: block;
   width: 20px;
@@ -104,7 +131,25 @@ const StyledMenu = styled.div`
 
 export default class HoverMenu extends React.Component {
   state = {
-    ssrDone: false
+    ssrDone: false,
+    showHelperInput: false
+  };
+
+  componentDidMount() {
+    this.setState({ ssrDone: true });
+  }
+
+  helperInputKeydown = e => {
+    const { editor, onToggleLinkVisibility } = this.props;
+    if (e.key === "Enter") {
+      const { value: href } = e.target;
+      editor.command(wrapLink, href);
+      setTimeout(() => {
+        this.setState({ showHelperInput: false }, () => {
+          onToggleLinkVisibility();
+        });
+      }, 20);
+    }
   };
 
   /**
@@ -112,14 +157,14 @@ export default class HoverMenu extends React.Component {
    *
    * @return {Element}
    */
-
-  componentDidMount() {
-    this.setState({ ssrDone: true });
-  }
-
   render() {
-    const { className, innerRef } = this.props;
-    const { ssrDone } = this.state;
+    const {
+      className,
+      innerRef,
+      onToggleLinkVisibility,
+      onMenuReposition
+    } = this.props;
+    const { ssrDone, showHelperInput } = this.state;
 
     // To prevent errors on SSR due to window not being available
     if (!ssrDone) {
@@ -129,21 +174,36 @@ export default class HoverMenu extends React.Component {
     const root = window.document.getElementsByTagName("body")[0];
 
     return ReactDOM.createPortal(
-      <StyledMenu className={className} ref={innerRef}>
-        {this.renderMarkButton("bold", FormatBold)}
-        {this.renderMarkButton("italic", FormatItalic)}
-        {this.renderBlockButton("heading-one", FormatH1)}
-        {this.renderBlockButton("heading-two", FormatH2)}
-        {this.renderBlockButton("block-quote", FormatQuote)}
-        {this.renderMarkButton("link", FormatLink)}
-        {this.renderBlockButton("numbered-list", FormatList)}
-        {this.renderBlockButton("bulleted-list", FormatListUl)}
-
-        {this.renderAlignButton("align_left", AlignLeft)}
-        {this.renderAlignButton("align_center", AlignCenter)}
-        {this.renderAlignButton("align_right", AlignRight)}
-        {this.renderAlignButton("align_justify", AlignJustify)}
-
+      <StyledMenu
+        onBlur={() => {
+          this.setState({ showHelperInput: false }, () => {
+            onToggleLinkVisibility();
+          });
+        }}
+        className={className}
+        ref={innerRef}
+      >
+        {showHelperInput ? (
+          <Fragment>
+            <HelperInput
+              type="text"
+              placeholder="Copy or type the link here"
+              onKeyDown={this.helperInputKeydown}
+            />
+            <HelperCloseButton
+              onClick={() => {
+                this.setState({ showHelperInput: false }, () => {
+                  onToggleLinkVisibility();
+                  onMenuReposition();
+                });
+              }}
+            >
+              x
+            </HelperCloseButton>
+          </Fragment>
+        ) : (
+          this.renderButtons()
+        )}
         <MenuArrow>
           <Arrow />
         </MenuArrow>
@@ -151,6 +211,26 @@ export default class HoverMenu extends React.Component {
       root
     );
   }
+
+  renderButtons = () => {
+    return (
+      <Fragment>
+        {this.renderMarkButton("bold", FormatBold)}
+        {this.renderMarkButton("italic", FormatItalic)}
+        {this.renderBlockButton("heading-one", FormatH1)}
+        {this.renderBlockButton("heading-two", FormatH2)}
+        {this.renderBlockButton("block-quote", FormatQuote)}
+        {this.renderLinkButton(FormatLink)}
+        {/* {this.renderBlockButton("numbered-list", FormatList)} */}
+        {this.renderBlockButton("bulleted-list", FormatListUl)}
+
+        {this.renderAlignButton("align_left", AlignLeft)}
+        {this.renderAlignButton("align_center", AlignCenter)}
+        {this.renderAlignButton("align_right", AlignRight)}
+        {this.renderAlignButton("align_justify", AlignJustify)}
+      </Fragment>
+    );
+  };
 
   /**
    * Render a mark-toggling toolbar button.
@@ -178,6 +258,31 @@ export default class HoverMenu extends React.Component {
   };
 
   /**
+   * Render a link-toggling toolbar button.
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @return {Element}
+   */
+
+  renderLinkButton = Image => {
+    const { editor } = this.props;
+    const isActive = hasLinks(editor);
+
+    return (
+      <Button
+        reversed
+        active={isActive}
+        onMouseDown={event => this.onClickLink(event, isActive)}
+      >
+        <Icon active={isActive}>
+          <Image />
+        </Icon>
+      </Button>
+    );
+  };
+
+  /**
    * Render a align-toggling toolbar button.
    *
    * @param {String} type
@@ -187,7 +292,7 @@ export default class HoverMenu extends React.Component {
 
   renderAlignButton = (type, Image) => {
     const { editor } = this.props;
-    let isActive = hasAlignment(editor, type);
+    const isActive = hasAlignment(editor, type);
 
     return (
       <Button
@@ -267,7 +372,25 @@ export default class HoverMenu extends React.Component {
     event.preventDefault();
     const { editor } = this.props;
     editor.toggleMark(type);
-    console.log("TOGGLE MARK");
+  };
+
+  /**
+   * When a Link button is clicked, open the helper input
+   *
+   * @param {Event} event
+   */
+
+  onClickLink = (event, hasLinks) => {
+    event.preventDefault();
+    const { editor, onToggleLinkVisibility } = this.props;
+
+    if (hasLinks) {
+      editor.command(unwrapLink);
+    } else {
+      this.setState({ showHelperInput: true }, () => {
+        onToggleLinkVisibility();
+      });
+    }
   };
 
   /**
