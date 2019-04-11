@@ -67,7 +67,7 @@ export default class ImageUploadButton extends React.Component {
   };
 
   render() {
-    const { opened, onFileSelected } = this.props;
+    const { opened } = this.props;
 
     return (
       <Fragment>

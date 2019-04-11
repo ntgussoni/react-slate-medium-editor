@@ -15,6 +15,7 @@ import {
 
 import HoverMenu from "../hover-menu";
 import SideMenu from "../side-menu";
+import Embed from "../embed";
 
 /**
  * A styled image block component.
@@ -60,6 +61,9 @@ const schema = {
   blocks: {
     image: {
       isVoid: true
+    },
+    embed: {
+      isVoid: true
     }
   }
 };
@@ -74,7 +78,8 @@ const DEFAULT_COMPONENTS = {
   "heading-two": "h2",
   "bulleted-list": "ul",
   "numbered-list": "ol",
-  "list-item": "li"
+  "list-item": "li",
+  embed: ({ children, ...props }) => <Embed {...props} />
 };
 
 /**
@@ -304,7 +309,12 @@ export default class ReactSlateMediumEditor extends React.Component {
     }
 
     return (
-      <Component {...attributes} style={alignmentStyle}>
+      <Component
+        {...attributes}
+        node={node}
+        editor={editor}
+        style={alignmentStyle}
+      >
         {children}
       </Component>
     );
