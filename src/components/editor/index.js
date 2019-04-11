@@ -266,12 +266,6 @@ export default class ReactSlateMediumEditor extends React.Component {
 
     const Component = components[mark.type] || DEFAULT_COMPONENTS[mark.type];
 
-    console.log(
-      mark.type,
-      components,
-      components[mark.type],
-      DEFAULT_COMPONENTS[mark.type]
-    );
     if (!Component) {
       return next();
     }

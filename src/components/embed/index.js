@@ -3,8 +3,7 @@ import urlParser from "js-video-url-parser";
 
 export default class Embed extends React.Component {
   state = {
-    value: "",
-    embedUrl: null
+    value: ""
   };
 
   onClick = e => {
@@ -12,34 +11,38 @@ export default class Embed extends React.Component {
   };
 
   onChange = e => {
-    const video = e.target.value;
-    const { node, editor } = this.props;
-    this.setState({ value: video });
-    editor.setNodeByKey(node.key, { data: { video } });
+    const { value } = e.target;
+    this.setState({ value });
   };
 
   handleKeyPress = e => {
-    const value = e.target.value;
+    const video = e.target.value;
+    const { node, editor } = this.props;
+
     if (e.key === "Enter") {
       e.preventDefault();
-
-      const videoInfo = urlParser.parse(value);
-
-      if (videoInfo) {
-        const embedUrl = urlParser.create({
-          videoInfo,
-          format: "embed"
-        });
-        this.setState({ showVideo: true, embedUrl });
-      }
+      editor.setNodeByKey(node.key, { data: { video } });
     }
   };
 
-  render() {
+  getEmbedUrl = () => {
     const { node } = this.props;
-    const { embedUrl, value } = this.state;
-    const video = node.data.get("video") || value;
-    console.log(embedUrl);
+    const video = node.data.get("video");
+    const videoInfo = video && urlParser.parse(video);
+
+    return videoInfo
+      ? urlParser.create({
+          videoInfo,
+          format: "embed"
+        })
+      : null;
+  };
+
+  render() {
+    const { value } = this.state;
+
+    const embedUrl = this.getEmbedUrl();
+
     return embedUrl ? (
       <div
         style={{
@@ -73,7 +76,7 @@ export default class Embed extends React.Component {
           outline: "none"
         }}
         type="text"
-        value={video}
+        value={value}
         placeholder="Paste or type a Youtube or Vimeo Link and press ENTER"
         onChange={this.onChange}
         onClick={this.onClick}
