@@ -1,7 +1,5 @@
-import React, { Fragment } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
-import { Editor } from "slate-react";
 import { ReactComponent as VideoIcon } from "../../assets/icons/video-plus-regular.svg";
 
 import ImageUploadButton from "./image-upload-button";
@@ -125,12 +123,6 @@ const StyledMenu = styled.div`
 `;
 
 export default class SideMenu extends React.Component {
-  static propTypes = {
-    editor: PropTypes.instanceOf(Editor),
-    className: PropTypes.string,
-    innerRef: PropTypes.node
-  };
-
   state = {
     opened: false,
     ssrDone: false

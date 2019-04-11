@@ -128,9 +128,9 @@ export default class ReactSlateMediumEditor extends React.Component {
     if (!sideMenu) return;
 
     const { value } = this.props;
+    if (!value) return;
     const { selection, blocks, texts } = value;
 
-    if (!value) return;
     if (!selection) return;
 
     if (selection.isBlurred || !selection.isCollapsed) {
@@ -174,8 +174,8 @@ export default class ReactSlateMediumEditor extends React.Component {
     if (!menu) return;
 
     const { value } = this.props;
-
     if (!value) return;
+
     const { fragment, selection, focusBlock } = value;
 
     const isImage = focusBlock && focusBlock.type === "image";
