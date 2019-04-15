@@ -54,6 +54,11 @@ export default class App extends Component {
           <ReactSlateMediumEditor
             onChange={this.onChange}
             value={value}
+            onFileSelected={(files, updateImage) => {
+              // updateImage(
+              //   "https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
+              // );
+            }}
             components={{
               bold: Bold,
               italic: Italic

@@ -1,13 +1,14 @@
 import React from "react";
-import styled from "styled-components";
 import Plain from "slate-plain-serializer";
 import { Block } from "slate";
-import { Editor, getEventRange, getEventTransfer } from "slate-react";
-import isUrl from "is-url";
-import imageExtensions from "../../image-extensions";
+import { Editor } from "slate-react";
+
+// import { Editor, getEventRange, getEventTransfer } from "slate-react";
+// import isUrl from "is-url";
 
 import {
-  insertImage,
+  // isImage,
+  // insertImage,
   getAlignmentStyle,
   getData,
   DEFAULT_NODE
@@ -16,29 +17,6 @@ import {
 import HoverMenu from "../hover-menu";
 import SideMenu from "../side-menu";
 import Embed from "../embed";
-
-/**
- * A styled image block component.
- *
- * @type {Component}
- */
-
-const Image = styled.img`
-  display: block;
-  max-width: 100%;
-  box-shadow: ${props => (props.selected ? "0 0 0 2px blue;" : "none")};
-`;
-
-/*
- * A function to determine whether a URL has an image extension.
- *
- * @param {String} url
- * @return {Boolean}
- */
-
-function isImage(url) {
-  return !!imageExtensions.find(url.endsWith);
-}
 
 /**
  * The editor's schema.
@@ -207,18 +185,18 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   render() {
-    const { value, placeholder, readOnly } = this.props;
+    const { value, placeholder, readOnly, className } = this.props;
 
     return (
-      <div>
+      <div className={className}>
         <Editor
           readOnly={readOnly}
           placeholder={placeholder || "Enter some text..."}
           value={value || Plain.deserialize("")}
           onChange={this.onChange}
           renderEditor={this.renderEditor}
-          onDrop={this.onDropOrPaste}
-          onPaste={this.onDropOrPaste}
+          // onDrop={this.onDropOrPaste}
+          // onPaste={this.onDropOrPaste}
           onKeyDown={this.onKeyDown}
           renderNode={this.renderNode}
           renderMark={this.renderMark}
@@ -237,6 +215,7 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   renderEditor = (props, editor, next) => {
+    const { onFileSelected } = this.props;
     const children = next();
     return (
       <React.Fragment>
@@ -245,7 +224,7 @@ export default class ReactSlateMediumEditor extends React.Component {
         <SideMenu
           innerRef={sideMenu => (this.sideMenu = sideMenu)}
           editor={editor}
-          onFileSelected={() => {}}
+          onFileSelected={onFileSelected}
         />
       </React.Fragment>
     );
@@ -322,37 +301,44 @@ export default class ReactSlateMediumEditor extends React.Component {
    * @param {Function} next
    */
 
-  onDropOrPaste = (event, editor, next) => {
-    const target = getEventRange(event, editor);
-    if (!target && event.type === "drop") return next();
+  // onDropOrPaste = (event, editor, next) => {
+  //   const { onFileSelected } = this.props;
 
-    const transfer = getEventTransfer(event);
-    const { type, text, files } = transfer;
+  //   const target = getEventRange(event, editor);
+  //   if (!target && event.type === "drop") return next();
 
-    if (type === "files") {
-      for (const file of files) {
-        const reader = new FileReader();
-        const [mime] = file.type.split("/");
-        if (mime !== "image") continue;
+  //   const transfer = getEventTransfer(event);
+  //   const { type, text, files } = transfer;
 
-        reader.addEventListener("load", () => {
-          editor.command(insertImage, reader.result, target);
-        });
+  //   if (type === "files") {
+  //     for (const file of files) {
+  //       const reader = new FileReader();
+  //       const [mime] = file.type.split("/");
+  //       if (mime !== "image") continue;
 
-        reader.readAsDataURL(file);
-      }
-      return;
-    }
+  //       reader.addEventListener("load", () => {
+  //         editor.command(
+  //           insertImage,
+  //           { file: reader.result, type: "base64" },
+  //           target,
+  //           onFileSelected
+  //         );
+  //       });
 
-    if (type === "text") {
-      if (!isUrl(text)) return next();
-      if (!isImage(text)) return next();
-      editor.command(insertImage, text, target);
-      return;
-    }
+  //       reader.readAsDataURL(file);
+  //     }
+  //     return;
+  //   }
 
-    next();
-  };
+  //   if (type === "text") {
+  //     if (!isUrl(text)) return next();
+  //     if (!isImage(text)) return next();
+  //     editor.command(insertImage, { file: text, type: "text" }, target);
+  //     return;
+  //   }
+
+  //   next();
+  // };
 
   /**
    * On change.
