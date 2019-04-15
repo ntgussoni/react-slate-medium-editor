@@ -9,16 +9,10 @@ export const DEFAULT_NODE = "paragraph";
  * @param {Editor} editor
  * @param {Object} file
  * @param {Range} target
- * @param {Function} callback
  *
  */
 
-export const insertImage = (
-  editor,
-  { file = null, type = "file" },
-  target,
-  callback
-) => {
+export const insertImage = (editor, { file = null, type = "file" }, target) => {
   if (target) {
     editor.select(target);
   }
@@ -34,16 +28,7 @@ export const insertImage = (
   });
 
   editor.insertBlock(imageBlock);
-
-  if (type === "file" && callback) {
-    callback(file, newSrc => {
-      editor.command(updateImage, imageBlock, newSrc);
-    });
-  }
-};
-
-export const updateImage = (editor, block, url) => {
-  setData(editor, block, { src: url });
+  return imageBlock;
 };
 
 /*

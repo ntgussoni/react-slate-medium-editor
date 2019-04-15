@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { ReactComponent as ImageIcon } from "../../../assets/icons/image-regular.svg";
-import { insertImage } from "../../../helpers";
+import { insertImage, setData } from "../../../helpers";
 import styled, { css } from "styled-components";
 
 const Button = styled.span`
@@ -58,7 +58,15 @@ export default class ImageUploadButton extends React.Component {
     const { onFileSelected, editor, toggleSideMenu } = this.props;
     const file = e.target.files[0];
     toggleSideMenu(e);
-    editor.command(insertImage, { file }, null, onFileSelected);
+    const newNode = editor.query(insertImage, { file }, null, onFileSelected);
+    if (onFileSelected) {
+      onFileSelected(file).then(url => {
+        // Should probably delegate this to the image component
+        if (editor.value.document.getNode(newNode.key)) {
+          editor.command(setData, newNode, { src: url });
+        }
+      });
+    }
   };
 
   render() {
