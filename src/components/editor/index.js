@@ -50,7 +50,11 @@ const DEFAULT_COMPONENTS = {
   italic: "i",
   bold: "strong",
   image: "img",
-  link: "a",
+  link: ({ children, data, ...props }) => (
+    <a href={data.get("href")} {...props}>
+      {children}
+    </a>
+  ),
   paragraph: "p",
   "block-quote": "blockquote",
   "heading-one": "h1",
@@ -317,7 +321,8 @@ export default class ReactSlateMediumEditor extends React.Component {
     return (
       <Component
         {...attributes}
-        node={node}
+        nodeKey={node.key}
+        data={node.data}
         editor={editor}
         selected={isFocused}
         style={alignmentStyle}

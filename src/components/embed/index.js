@@ -15,19 +15,32 @@ export default class Embed extends React.Component {
     this.setState({ value });
   };
 
+  selfDestroy = () => {
+    const { nodeKey, editor } = this.props;
+    editor.removeNodeByKey(nodeKey);
+  };
+
+  handleBlur = e => {
+    e.stopPropagation();
+    const video = e.target.value;
+    if (video === "") this.selfDestroy();
+  };
+
   handleKeyPress = e => {
     const video = e.target.value;
-    const { node, editor } = this.props;
+    const { nodeKey, editor } = this.props;
 
     if (e.key === "Enter") {
       e.preventDefault();
-      editor.setNodeByKey(node.key, { data: { video } });
+      video !== ""
+        ? editor.setNodeByKey(nodeKey, { data: { video } })
+        : this.selfDestroy();
     }
   };
 
   getEmbedUrl = () => {
-    const { node } = this.props;
-    const video = node.data.get("video");
+    const { data } = this.props;
+    const video = data.get("video");
     const videoInfo = video && urlParser.parse(video);
 
     return videoInfo
@@ -40,7 +53,6 @@ export default class Embed extends React.Component {
 
   render() {
     const { value } = this.state;
-
     const embedUrl = this.getEmbedUrl();
 
     return embedUrl ? (
@@ -65,23 +77,26 @@ export default class Embed extends React.Component {
         />
       </div>
     ) : (
-      <input
-        autoFocus
-        style={{
-          padding: "10px",
-          border: "none",
-          width: "100%",
-          fontSize: "16px",
-          placeholderColor: "#e3e3e3",
-          outline: "none"
-        }}
-        type="text"
-        value={value}
-        placeholder="Paste or type a Youtube or Vimeo Link and press ENTER"
-        onChange={this.onChange}
-        onClick={this.onClick}
-        onKeyDown={this.handleKeyPress}
-      />
+      <p>
+        <input
+          autoFocus
+          style={{
+            padding: "10px",
+            border: "none",
+            width: "100%",
+            fontSize: "16px",
+            placeholderColor: "#e3e3e3",
+            outline: "none"
+          }}
+          type="text"
+          value={value}
+          placeholder="Paste or type a Youtube or Vimeo Link and press ENTER"
+          onChange={this.onChange}
+          onClick={this.onClick}
+          onKeyDown={this.handleKeyPress}
+          onBlur={this.handleBlur}
+        />
+      </p>
     );
   }
 }
