@@ -1,13 +1,14 @@
 import React from "react";
-import styled from "styled-components";
 import Plain from "slate-plain-serializer";
 import { Block } from "slate";
-import { Editor, getEventRange, getEventTransfer } from "slate-react";
-import isUrl from "is-url";
-import imageExtensions from "../../image-extensions";
+import { Editor } from "slate-react";
+
+// import { Editor, getEventRange, getEventTransfer } from "slate-react";
+// import isUrl from "is-url";
 
 import {
-  insertImage,
+  // isImage,
+  // insertImage,
   getAlignmentStyle,
   getData,
   DEFAULT_NODE
@@ -15,29 +16,7 @@ import {
 
 import HoverMenu from "../hover-menu";
 import SideMenu from "../side-menu";
-
-/**
- * A styled image block component.
- *
- * @type {Component}
- */
-
-const Image = styled.img`
-  display: block;
-  max-width: 100%;
-  box-shadow: ${props => (props.selected ? "0 0 0 2px blue;" : "none")};
-`;
-
-/*
- * A function to determine whether a URL has an image extension.
- *
- * @param {String} url
- * @return {Boolean}
- */
-
-function isImage(url) {
-  return !!imageExtensions.find(url.endsWith);
-}
+import Embed from "../embed";
 
 /**
  * The editor's schema.
@@ -48,7 +27,7 @@ function isImage(url) {
 const schema = {
   document: {
     last: { type: "paragraph" },
-    normalize: (editor, { code, node, child }) => {
+    normalize: (editor, { code, node }) => {
       switch (code) {
         case "last_child_type_invalid": {
           const paragraph = Block.create("paragraph");
@@ -60,6 +39,9 @@ const schema = {
   blocks: {
     image: {
       isVoid: true
+    },
+    embed: {
+      isVoid: true
     }
   }
 };
@@ -67,21 +49,16 @@ const schema = {
 const DEFAULT_COMPONENTS = {
   italic: "i",
   bold: "strong",
-  image: ({ data, children, ...props }) => (
-    <Image src={data.get("src")} {...props} />
-  ),
-  link: ({ children, data, ...props }) => (
-    <a href={data.get("href")} {...props}>
-      {children}
-    </a>
-  ),
+  image: "img",
+  link: "a",
   paragraph: "p",
   "block-quote": "blockquote",
   "heading-one": "h1",
   "heading-two": "h2",
   "bulleted-list": "ul",
   "numbered-list": "ol",
-  "list-item": "li"
+  "list-item": "li",
+  embed: ({ children, ...props }) => <Embed {...props} />
 };
 
 /**
@@ -146,9 +123,9 @@ export default class ReactSlateMediumEditor extends React.Component {
     if (!sideMenu) return;
 
     const { value } = this.props;
+    if (!value) return;
     const { selection, blocks, texts } = value;
 
-    if (!value) return;
     if (!selection) return;
 
     if (selection.isBlurred || selection.isExpanded) {
@@ -201,6 +178,8 @@ export default class ReactSlateMediumEditor extends React.Component {
 
   repositionMenu = () => {
     const menu = this.menu;
+    if (!menu) return;
+
     const rect = window
       .getSelection()
       .getRangeAt(0)
@@ -231,7 +210,6 @@ export default class ReactSlateMediumEditor extends React.Component {
     const isImage = focusBlock && focusBlock.type === "image";
     const isText = selection.isExpanded && fragment.text !== "";
     const textOrImageSelected = selection.isFocused && (isText || isImage);
-    console.log(selection, textOrImageSelected, showLinkInput);
     if (textOrImageSelected || showLinkInput) {
       this.repositionMenu();
     } else {
@@ -246,10 +224,10 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   render() {
-    const { value, placeholder, readOnly } = this.props;
+    const { value, placeholder, readOnly, className } = this.props;
 
     return (
-      <div>
+      <div className={className}>
         <Editor
           readOnly={readOnly}
           placeholder={placeholder || "Enter some text..."}
@@ -257,8 +235,8 @@ export default class ReactSlateMediumEditor extends React.Component {
           onChange={this.onChange}
           renderEditor={this.renderEditor}
           ref={ref => (this.editor = ref)}
-          onDrop={this.onDropOrPaste}
-          onPaste={this.onDropOrPaste}
+          // onDrop={this.onDropOrPaste}
+          // onPaste={this.onDropOrPaste}
           // onKeyDown={this.onKeyDown}
           renderNode={this.renderNode}
           renderMark={this.renderMark}
@@ -277,6 +255,7 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   renderEditor = (props, editor, next) => {
+    const { onFileSelected } = this.props;
     const children = next();
     return (
       <React.Fragment>
@@ -290,7 +269,7 @@ export default class ReactSlateMediumEditor extends React.Component {
         <SideMenu
           innerRef={sideMenu => (this.sideMenu = sideMenu)}
           editor={editor}
-          onFileSelected={() => {}}
+          onFileSelected={onFileSelected}
         />
       </React.Fragment>
     );
@@ -338,7 +317,8 @@ export default class ReactSlateMediumEditor extends React.Component {
     return (
       <Component
         {...attributes}
-        data={node.data}
+        node={node}
+        editor={editor}
         selected={isFocused}
         style={alignmentStyle}
       >
@@ -355,37 +335,44 @@ export default class ReactSlateMediumEditor extends React.Component {
    * @param {Function} next
    */
 
-  onDropOrPaste = (event, editor, next) => {
-    const target = getEventRange(event, editor);
-    if (!target && event.type === "drop") return next();
+  // onDropOrPaste = (event, editor, next) => {
+  //   const { onFileSelected } = this.props;
 
-    const transfer = getEventTransfer(event);
-    const { type, text, files } = transfer;
+  //   const target = getEventRange(event, editor);
+  //   if (!target && event.type === "drop") return next();
 
-    if (type === "files") {
-      for (const file of files) {
-        const reader = new FileReader();
-        const [mime] = file.type.split("/");
-        if (mime !== "image") continue;
+  //   const transfer = getEventTransfer(event);
+  //   const { type, text, files } = transfer;
 
-        reader.addEventListener("load", () => {
-          editor.command(insertImage, reader.result, target);
-        });
+  //   if (type === "files") {
+  //     for (const file of files) {
+  //       const reader = new FileReader();
+  //       const [mime] = file.type.split("/");
+  //       if (mime !== "image") continue;
 
-        reader.readAsDataURL(file);
-      }
-      return;
-    }
+  //       reader.addEventListener("load", () => {
+  //         editor.command(
+  //           insertImage,
+  //           { file: reader.result, type: "base64" },
+  //           target,
+  //           onFileSelected
+  //         );
+  //       });
 
-    if (type === "text") {
-      if (!isUrl(text)) return next();
-      if (!isImage(text)) return next();
-      editor.command(insertImage, text, target);
-      return;
-    }
+  //       reader.readAsDataURL(file);
+  //     }
+  //     return;
+  //   }
 
-    next();
-  };
+  //   if (type === "text") {
+  //     if (!isUrl(text)) return next();
+  //     if (!isImage(text)) return next();
+  //     editor.command(insertImage, { file: text, type: "text" }, target);
+  //     return;
+  //   }
+
+  //   next();
+  // };
 
   /**
    * On change.
@@ -395,7 +382,6 @@ export default class ReactSlateMediumEditor extends React.Component {
 
   onChange = change => {
     const { onChange } = this.props;
-    console.log("CHANGED", change);
     onChange(change.value);
   };
 }

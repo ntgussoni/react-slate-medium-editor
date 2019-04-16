@@ -34,12 +34,13 @@ export default class App extends Component {
     this.setState({ value });
   };
 
-  onChange2 = value2 => {
-    this.setState({ value2 });
-  };
+  // onChange2 = value2 => {
+  //   this.setState({ value2 });
+  // };
 
   render() {
-    const { value, value2 } = this.state;
+    // const { value, value2 } = this.state;
+    const { value } = this.state;
 
     return (
       <div>
@@ -54,6 +55,13 @@ export default class App extends Component {
           <ReactSlateMediumEditor
             onChange={this.onChange}
             value={value}
+            onFileSelected={async (files, updateImage) => {
+              await setTimeout(() => {
+                updateImage(
+                  "https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
+                );
+              }, 5000);
+            }}
             components={{
               bold: Bold,
               italic: Italic

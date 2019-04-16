@@ -22,11 +22,12 @@
     "deploy": "gh-pages -d example/build"
   },
   "dependencies": {
-    "is-url": "^1.2.4",
-    "slate-plain-serializer": "^0.6.36",
     "immutable": "^4.0.0-rc.12",
-    "slate": "^0.44.10",
     "is-hotkey": "^0.1.4",
+    "is-url": "^1.2.4",
+    "js-video-url-parser": "^0.3.1",
+    "slate": "^0.44.10",
+    "slate-plain-serializer": "^0.6.36",
     "slate-react": "^0.21.16",
     "styled-components": "4.1.3"
   },

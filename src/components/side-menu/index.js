@@ -1,10 +1,8 @@
-import React, { Fragment } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
-import { Editor } from "slate-react";
-import { ReactComponent as ImageIcon } from "../../assets/icons/image-regular.svg";
+import { ReactComponent as VideoIcon } from "../../assets/icons/video-plus-regular.svg";
+
 import ImageUploadButton from "./image-upload-button";
-import { insertImage } from "../../helpers";
 
 import styled, { css } from "styled-components";
 
@@ -48,7 +46,7 @@ const Icon = styled.span`
     height: 17px;
     box-sizing: content-box;
     background-size: cover;
-    color: ${props => (props.active ? "white" : "#aaa")};
+    color: ${props => (props.active ? "#ccc" : "#000")};
   }
 `;
 
@@ -125,12 +123,6 @@ const StyledMenu = styled.div`
 `;
 
 export default class SideMenu extends React.Component {
-  static propTypes = {
-    editor: PropTypes.instanceOf(Editor),
-    className: PropTypes.string,
-    innerRef: PropTypes.node
-  };
-
   state = {
     opened: false,
     ssrDone: false
@@ -175,9 +167,7 @@ export default class SideMenu extends React.Component {
             toggleSideMenu={this.toggleSideMenu}
             onFileSelected={onFileSelected}
           />
-          {/* {this.renderButton("video", ImageIcon, 150, opened)}
-          {this.renderButton("another", ImageIcon, 250, opened)}
-          {this.renderButton("bla", ImageIcon, 350, opened)} */}
+          {this.renderButton("video", VideoIcon, 150, opened)}
         </ButtonContainer>
       </StyledMenu>,
       root
@@ -206,4 +196,12 @@ export default class SideMenu extends React.Component {
       </Button>
     );
   }
+
+  onButtonClick = (e, type) => {
+    e.preventDefault();
+    const { editor } = this.props;
+    if (type === "video") {
+      editor.setBlocks("embed");
+    }
+  };
 }

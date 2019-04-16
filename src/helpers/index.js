@@ -1,22 +1,45 @@
+import { Block } from "slate";
+import imageExtensions from "../image-extensions";
+
 export const DEFAULT_NODE = "paragraph";
 
 /**
  * A change function to standardize inserting images.
  *
  * @param {Editor} editor
- * @param {String} src
+ * @param {Object} file
  * @param {Range} target
+ *
  */
 
-export const insertImage = (editor, src, target) => {
+export const insertImage = (editor, { file = null, type = "file" }, target) => {
   if (target) {
     editor.select(target);
   }
 
-  editor.insertBlock({
+  let src = file;
+  if (type === "file") {
+    src = URL.createObjectURL(file);
+  }
+
+  const imageBlock = Block.create({
     type: "image",
     data: { src }
   });
+
+  editor.insertBlock(imageBlock);
+  return imageBlock;
+};
+
+/*
+ * A function to determine whether a URL has an image extension.
+ *
+ * @param {String} url
+ * @return {Boolean}
+ */
+
+export const isImage = url => {
+  return !!imageExtensions.find(url.endsWith);
 };
 
 export const wrapLink = (editor, href) => {

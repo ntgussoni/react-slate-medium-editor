@@ -8,7 +8,6 @@ import { ReactComponent as FormatH1 } from "../../assets/icons/text_large.svg";
 import { ReactComponent as FormatH2 } from "../../assets/icons/text_small.svg";
 import { ReactComponent as FormatQuote } from "../../assets/icons/quote.svg";
 
-import { ReactComponent as FormatList } from "../../assets/icons/list.svg";
 import { ReactComponent as FormatListUl } from "../../assets/icons/list_ul.svg";
 
 import { ReactComponent as AlignCenter } from "../../assets/icons/align_center.svg";
