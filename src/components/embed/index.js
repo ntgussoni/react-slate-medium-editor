@@ -132,7 +132,7 @@ export default class Embed extends React.Component {
     const { data } = this.props;
     const video = data.get("video");
 
-    const isBlob = window && video instanceof Blob;
+    const isBlob = typeof window !== "undefined" && video instanceof Blob;
     const isUrl = typeof video === "string";
     const embedUrl = isUrl && this.getEmbedUrl();
 
