@@ -46,23 +46,55 @@ const schema = {
   }
 };
 
+const Italic = ({ attributes, children }) => <i {...attributes}>{children} </i>;
+const Bold = ({ attributes, children }) => (
+  <strong {...attributes}>{children}</strong>
+);
+const Image = ({ attributes }) => <img {...attributes} />;
+const Link = ({ attributes, children, data }) => (
+  <a {...attributes} href={data.get("href")}>
+    {children}
+  </a>
+);
+const Paragraph = ({ attributes, children }) => (
+  <p {...attributes}>{children}</p>
+);
+const Blockquote = ({ attributes, children }) => (
+  <blockquote {...attributes}>{children}</blockquote>
+);
+const HeadingOne = ({ attributes, children }) => (
+  <h1 {...attributes}>{children}</h1>
+);
+const HeadingTwo = ({ attributes, children }) => (
+  <h2 {...attributes}>{children}</h2>
+);
+const BulletedList = ({ attributes, children }) => (
+  <ul {...attributes}>{children}</ul>
+);
+const NumberedList = ({ attributes, children }) => (
+  <ol {...attributes}>{children}</ol>
+);
+const ListItem = ({ attributes, children }) => (
+  <li {...attributes}>{children}</li>
+);
+
+const VideoEmbed = ({ attributes, data, editor }) => (
+  <Embed {...attributes} editor={editor} data={data} />
+);
+
 const DEFAULT_COMPONENTS = {
-  italic: "i",
-  bold: "strong",
-  image: "img",
-  link: ({ children, data, ...props }) => (
-    <a href={data.get("href")} {...props}>
-      {children}
-    </a>
-  ),
-  paragraph: "p",
-  "block-quote": "blockquote",
-  "heading-one": "h1",
-  "heading-two": "h2",
-  "bulleted-list": "ul",
-  "numbered-list": "ol",
-  "list-item": "li",
-  embed: ({ children, ...props }) => <Embed {...props} />
+  italic: Italic,
+  bold: Bold,
+  image: Image,
+  link: Link,
+  paragraph: Paragraph,
+  "block-quote": Blockquote,
+  "heading-one": HeadingOne,
+  "heading-two": HeadingTwo,
+  "bulleted-list": BulletedList,
+  "numbered-list": NumberedList,
+  "list-item": ListItem,
+  embed: VideoEmbed
 };
 
 /**
@@ -83,10 +115,10 @@ export default class ReactSlateMediumEditor extends React.Component {
     // this.updateSideMenu();
 
     if (window) {
-      window.addEventListener("resize", () => {
-        this.scheduleReposition();
-        this.updateSideMenu();
-      });
+      // window.addEventListener("resize", () => {
+      //   this.scheduleReposition();
+      //   this.updateSideMenu();
+      // });
     }
   };
 
@@ -97,7 +129,7 @@ export default class ReactSlateMediumEditor extends React.Component {
 
   componentWillUnmount = () => {
     if (window) {
-      window.removeEventListener("resize");
+      // window.removeEventListener("resize");
     }
   };
 
@@ -298,7 +330,7 @@ export default class ReactSlateMediumEditor extends React.Component {
       return next();
     }
 
-    return <Component {...attributes}>{children}</Component>;
+    return <Component attributes={attributes}>{children}</Component>;
   };
 
   /**
@@ -320,8 +352,7 @@ export default class ReactSlateMediumEditor extends React.Component {
 
     return (
       <Component
-        {...attributes}
-        nodeKey={node.key}
+        attributes={attributes}
         data={node.data}
         editor={editor}
         selected={isFocused}

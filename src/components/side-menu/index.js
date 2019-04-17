@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { ReactComponent as VideoIcon } from "../../assets/icons/video-plus-regular.svg";
 
 import ImageUploadButton from "./image-upload-button";
+import VideoUploadButton from "./video-upload-button";
 
 import styled, { css } from "styled-components";
 
@@ -162,6 +163,12 @@ export default class SideMenu extends React.Component {
 
         <ButtonContainer>
           <ImageUploadButton
+            editor={editor}
+            opened={opened}
+            toggleSideMenu={this.toggleSideMenu}
+            onFileSelected={onFileSelected}
+          />
+          <VideoUploadButton
             editor={editor}
             opened={opened}
             toggleSideMenu={this.toggleSideMenu}

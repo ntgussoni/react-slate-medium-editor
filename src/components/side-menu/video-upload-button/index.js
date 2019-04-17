@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
-import { ReactComponent as ImageIcon } from "../../../assets/icons/image-regular.svg";
-import { insertImage, setData } from "../../../helpers";
+import { ReactComponent as VideoIcon } from "../../../assets/icons/video-plus-regular.svg";
+import { insertVideo, setData } from "../../../helpers";
 import styled, { css } from "styled-components";
 
 export default class ImageUploadButton extends React.Component {
@@ -8,12 +8,12 @@ export default class ImageUploadButton extends React.Component {
     const { onFileSelected, editor, toggleSideMenu } = this.props;
     const file = e.target.files[0];
     toggleSideMenu(e);
-    const newNode = editor.query(insertImage, { file }, null);
+    const newNode = editor.query(insertVideo, { file }, null);
     if (onFileSelected) {
       onFileSelected(file).then(url => {
         // Should probably delegate this to the image component
         if (editor.value.document.getNode(newNode.key)) {
-          editor.command(setData, newNode, { src: url });
+          editor.command(setData, newNode, { video: url });
         }
       });
     }
@@ -37,7 +37,7 @@ export default class ImageUploadButton extends React.Component {
           onMouseDown={() => this.uploadInput.click()}
         >
           <Icon>
-            <ImageIcon />
+            <VideoIcon />
           </Icon>
         </Button>
       </Fragment>
