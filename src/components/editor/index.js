@@ -27,7 +27,7 @@ import Embed from "../embed";
 const schema = {
   document: {
     last: { type: "paragraph" },
-    normalize: (editor, { code, node, child }) => {
+    normalize: (editor, { code, node }) => {
       switch (code) {
         case "last_child_type_invalid": {
           const paragraph = Block.create("paragraph");
@@ -46,18 +46,55 @@ const schema = {
   }
 };
 
+const Italic = ({ attributes, children }) => <i {...attributes}>{children} </i>;
+const Bold = ({ attributes, children }) => (
+  <strong {...attributes}>{children}</strong>
+);
+const Image = ({ attributes }) => <img {...attributes} />;
+const Link = ({ attributes, children, data }) => (
+  <a {...attributes} href={data.get("href")}>
+    {children}
+  </a>
+);
+const Paragraph = ({ attributes, children }) => (
+  <p {...attributes}>{children}</p>
+);
+const Blockquote = ({ attributes, children }) => (
+  <blockquote {...attributes}>{children}</blockquote>
+);
+const HeadingOne = ({ attributes, children }) => (
+  <h1 {...attributes}>{children}</h1>
+);
+const HeadingTwo = ({ attributes, children }) => (
+  <h2 {...attributes}>{children}</h2>
+);
+const BulletedList = ({ attributes, children }) => (
+  <ul {...attributes}>{children}</ul>
+);
+const NumberedList = ({ attributes, children }) => (
+  <ol {...attributes}>{children}</ol>
+);
+const ListItem = ({ attributes, children }) => (
+  <li {...attributes}>{children}</li>
+);
+
+const VideoEmbed = ({ attributes, data, editor }) => (
+  <Embed {...attributes} editor={editor} data={data} />
+);
+
 const DEFAULT_COMPONENTS = {
-  italic: "i",
-  bold: "strong",
-  image: "img",
-  paragraph: "p",
-  "block-quote": "blockquote",
-  "heading-one": "h1",
-  "heading-two": "h2",
-  "bulleted-list": "ul",
-  "numbered-list": "ol",
-  "list-item": "li",
-  embed: ({ children, ...props }) => <Embed {...props} />
+  italic: Italic,
+  bold: Bold,
+  image: Image,
+  link: Link,
+  paragraph: Paragraph,
+  "block-quote": Blockquote,
+  "heading-one": HeadingOne,
+  "heading-two": HeadingTwo,
+  "bulleted-list": BulletedList,
+  "numbered-list": NumberedList,
+  "list-item": ListItem,
+  embed: VideoEmbed
 };
 
 /**
@@ -66,13 +103,23 @@ const DEFAULT_COMPONENTS = {
  * @type {Component}
  */
 export default class ReactSlateMediumEditor extends React.Component {
+  state = {
+    showLinkInput: false
+  };
   /**
    * On update, update the menu.
    */
 
   componentDidMount = () => {
-    this.updateMenu();
-    this.updateSideMenu();
+    // this.updateMenu();
+    // this.updateSideMenu();
+
+    if (window) {
+      // window.addEventListener("resize", () => {
+      //   this.scheduleReposition();
+      //   this.updateSideMenu();
+      // });
+    }
   };
 
   componentDidUpdate = () => {
@@ -80,22 +127,28 @@ export default class ReactSlateMediumEditor extends React.Component {
     this.updateSideMenu();
   };
 
-  onKeyDown = (event, editor, next) => {
-    const { value } = editor;
-
-    // Soft break, line return if shift pressed
-
-    if (event.key === "Enter") {
-      if (event.shiftKey === true) {
-        editor.insertText("\n");
-        return;
-      }
-
-      return editor.insertBlock(DEFAULT_NODE);
+  componentWillUnmount = () => {
+    if (window) {
+      // window.removeEventListener("resize");
     }
-
-    return next();
   };
+
+  // onKeyDown = (event, editor, next) => {
+  //   const { value } = editor;
+
+  //   // Soft break, line return if shift pressed
+
+  //   if (event.key === "Enter") {
+  //     if (event.shiftKey === true) {
+  //       editor.insertText("\n");
+  //       return;
+  //     }
+
+  //     return editor.insertBlock(DEFAULT_NODE);
+  //   }
+
+  //   return next();
+  // };
 
   /**
    * Update the menu's absolute position.
@@ -111,7 +164,7 @@ export default class ReactSlateMediumEditor extends React.Component {
 
     if (!selection) return;
 
-    if (selection.isBlurred || !selection.isCollapsed) {
+    if (selection.isBlurred || selection.isExpanded) {
       sideMenu.removeAttribute("style");
       return;
     }
@@ -132,50 +185,72 @@ export default class ReactSlateMediumEditor extends React.Component {
       return;
     }
 
-    const range = native.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    sideMenu.style.opacity = 1;
-
+    const rect = window
+      .getSelection()
+      .getRangeAt(0)
+      .getBoundingClientRect();
     const top = rect.top + window.pageYOffset - (15 - rect.height / 2);
-    sideMenu.style.top = `${top}px`;
-
     const left = rect.left;
+
+    sideMenu.style.opacity = 1;
+    sideMenu.style.top = `${top}px`;
     sideMenu.style.left = `${left}px`;
   };
 
+  toggleLinkVisibility = () => {
+    this.setState(prevState => {
+      return { showLinkInput: !prevState.showLinkInput };
+    }, this.updateMenu());
+  };
+
+  scheduleReposition = () => {
+    setTimeout(() => {
+      return this.repositionMenu();
+    }, 0);
+  };
   /**
    * Update the menu's absolute position.
    */
 
-  updateMenu = () => {
+  repositionMenu = () => {
     const menu = this.menu;
     if (!menu) return;
 
-    const { value } = this.props;
-    if (!value) return;
+    const rect = window
+      .getSelection()
+      .getRangeAt(0)
+      .getBoundingClientRect();
 
-    const { fragment, selection, focusBlock } = value;
-
-    const isImage = focusBlock && focusBlock.type === "image";
-
-    if (!(selection.isFocused && (selection.isExpanded || isImage))) {
-      menu.removeAttribute("style");
+    // This is a fix for the link doing weird things
+    if (rect.top === 0 && rect.left === 0) {
       return;
     }
 
-    const native = window.getSelection();
-    const range = native.getRangeAt(0);
-
-    const rect = range.getBoundingClientRect();
-    menu.style.opacity = 1;
-
     const top = rect.top + window.pageYOffset - menu.offsetHeight;
-    menu.style.top = `${top < 0 ? 0 : top}px`;
-
     const left =
       rect.left + window.pageXOffset - menu.offsetWidth / 2 + rect.width / 2;
 
+    menu.style.opacity = 1;
+    menu.style.top = `${top < 0 ? 0 : top}px`;
     menu.style.left = `${left < 0 ? 0 : left}px`;
+  };
+
+  updateMenu = () => {
+    const { value } = this.props;
+    const { showLinkInput } = this.state;
+    const { fragment, selection, focusBlock } = value;
+    const menu = this.menu;
+    if (!menu) return;
+    if (!value) return;
+
+    const isImage = focusBlock && focusBlock.type === "image";
+    const isText = selection.isExpanded && fragment.text !== "";
+    const textOrImageSelected = selection.isFocused && (isText || isImage);
+    if (textOrImageSelected || showLinkInput) {
+      this.repositionMenu();
+    } else {
+      menu.removeAttribute("style");
+    }
   };
 
   /**
@@ -195,9 +270,10 @@ export default class ReactSlateMediumEditor extends React.Component {
           value={value || Plain.deserialize("")}
           onChange={this.onChange}
           renderEditor={this.renderEditor}
+          ref={ref => (this.editor = ref)}
           // onDrop={this.onDropOrPaste}
           // onPaste={this.onDropOrPaste}
-          onKeyDown={this.onKeyDown}
+          // onKeyDown={this.onKeyDown}
           renderNode={this.renderNode}
           renderMark={this.renderMark}
           schema={schema}
@@ -220,7 +296,12 @@ export default class ReactSlateMediumEditor extends React.Component {
     return (
       <React.Fragment>
         {children}
-        <HoverMenu innerRef={menu => (this.menu = menu)} editor={editor} />
+        <HoverMenu
+          innerRef={menu => (this.menu = menu)}
+          onToggleLinkVisibility={this.toggleLinkVisibility}
+          onMenuReposition={this.scheduleReposition}
+          editor={editor}
+        />
         <SideMenu
           innerRef={sideMenu => (this.sideMenu = sideMenu)}
           editor={editor}
@@ -249,7 +330,7 @@ export default class ReactSlateMediumEditor extends React.Component {
       return next();
     }
 
-    return <Component {...attributes}>{children}</Component>;
+    return <Component attributes={attributes}>{children}</Component>;
   };
 
   /**
@@ -269,23 +350,12 @@ export default class ReactSlateMediumEditor extends React.Component {
       return next();
     }
 
-    if (node.type === "image") {
-      const src = node.data.get("src");
-      return (
-        <Component
-          {...attributes}
-          style={alignmentStyle}
-          src={src}
-          selected={isFocused}
-        />
-      );
-    }
-
     return (
       <Component
-        {...attributes}
-        node={node}
+        attributes={attributes}
+        data={node.data}
         editor={editor}
+        selected={isFocused}
         style={alignmentStyle}
       >
         {children}
@@ -348,7 +418,6 @@ export default class ReactSlateMediumEditor extends React.Component {
 
   onChange = change => {
     const { onChange } = this.props;
-    console.log("CALLING ON CHANGE", change);
     onChange(change.value);
   };
 }

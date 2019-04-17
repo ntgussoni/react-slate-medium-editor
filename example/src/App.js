@@ -8,14 +8,14 @@ import {
   KeyUtils
 } from "react-slate-medium-editor";
 
-const Bold = ({ children, ...rest }) => (
-  <strong style={{ fontWeight: "bold" }} {...rest}>
+const Bold = ({ attributes, children }) => (
+  <strong style={{ fontWeight: "bold" }} {...attributes}>
     {children}
   </strong>
 );
 
-const Italic = ({ children, ...rest }) => (
-  <i style={{ fontStyle: "italic" }} {...rest}>
+const Italic = ({ attributes, children }) => (
+  <i style={{ fontStyle: "italic" }} {...attributes}>
     {children}
   </i>
 );
@@ -55,13 +55,12 @@ export default class App extends Component {
           <ReactSlateMediumEditor
             onChange={this.onChange}
             value={value}
-            onFileSelected={async (files, updateImage) => {
-              await setTimeout(() => {
-                updateImage(
-                  "https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
-                );
-              }, 5000);
-            }}
+            onFileSelected={
+              async (/* file */) => {
+                // File marked for upload
+                return "https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500";
+              }
+            }
             components={{
               bold: Bold,
               italic: Italic

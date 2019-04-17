@@ -31,6 +31,29 @@ export const insertImage = (editor, { file = null, type = "file" }, target) => {
   return imageBlock;
 };
 
+/**
+ * A change function to standardize inserting videos.
+ *
+ * @param {Editor} editor
+ * @param {Object} url
+ * @param {Range} target
+ *
+ */
+
+export const insertVideo = (editor, { file = null }, target) => {
+  if (target) {
+    editor.select(target);
+  }
+
+  const videoBlock = Block.create({
+    type: "embed",
+    data: { video: file }
+  });
+
+  editor.insertBlock(videoBlock);
+  return videoBlock;
+};
+
 /*
  * A function to determine whether a URL has an image extension.
  *
