@@ -6,7 +6,7 @@ import styled, { css } from "styled-components";
 export default class ImageUploadButton extends React.Component {
   handleFileSelection = e => {
     const { onFileSelected, editor, toggleSideMenu } = this.props;
-    const file = e.target.files[0];
+    const [file] = e.target.files;
     toggleSideMenu(e);
     const newNode = editor.query(insertImage, { file }, null);
     if (onFileSelected) {

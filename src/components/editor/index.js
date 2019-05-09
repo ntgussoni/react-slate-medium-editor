@@ -50,7 +50,9 @@ const Italic = ({ attributes, children }) => <i {...attributes}>{children} </i>;
 const Bold = ({ attributes, children }) => (
   <strong {...attributes}>{children}</strong>
 );
-const Image = ({ attributes }) => <img {...attributes} />;
+const Image = ({ attributes, data }) => (
+  <img {...attributes} src={data.get("src")} />
+);
 const Link = ({ attributes, children, data }) => (
   <a {...attributes} href={data.get("href")}>
     {children}
