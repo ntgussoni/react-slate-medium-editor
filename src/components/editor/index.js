@@ -1,5 +1,4 @@
 import React from "react";
-import Plain from "slate-plain-serializer";
 import { Block } from "slate";
 import { Editor } from "slate-react";
 
@@ -269,7 +268,7 @@ export default class ReactSlateMediumEditor extends React.Component {
         <Editor
           readOnly={readOnly}
           placeholder={placeholder || "Enter some text..."}
-          value={value || Plain.deserialize("")}
+          value={value}
           onChange={this.onChange}
           renderEditor={this.renderEditor}
           ref={ref => (this.editor = ref)}

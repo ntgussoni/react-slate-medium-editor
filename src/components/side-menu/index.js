@@ -117,7 +117,7 @@ const ButtonContainer = styled.div`
 const StyledMenu = styled.div`
   display: flex;
   position: absolute;
-  z-index: 1;
+  z-index: 9999;
   top: -10000px;
   left: -10000px;
   margin-left: -40px;
