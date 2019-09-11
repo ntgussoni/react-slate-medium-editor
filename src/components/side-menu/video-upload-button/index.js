@@ -27,6 +27,7 @@ export default class ImageUploadButton extends React.Component {
         <input
           style={{ display: "none" }}
           type="file"
+          accept="video/mp4,video/x-m4v,video/*"
           ref={ref => (this.uploadInput = ref)}
           onChange={e => this.handleFileSelection(e)}
         />

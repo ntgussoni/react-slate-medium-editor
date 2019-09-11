@@ -26,6 +26,7 @@ export default class ImageUploadButton extends React.Component {
         <input
           style={{ display: "none" }}
           type="file"
+          accept="image/*"
           ref={ref => (this.uploadInput = ref)}
           onChange={e => this.handleFileSelection(e)}
         />
