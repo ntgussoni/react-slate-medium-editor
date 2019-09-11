@@ -1,6 +1,24 @@
 import { Block } from "slate";
 import imageExtensions from "../image-extensions";
 
+export const EMPTY_TEXT = {
+  object: "value",
+  document: {
+    object: "document",
+    data: {},
+    nodes: [
+      {
+        object: "block",
+        type: "paragraph",
+        data: {},
+        nodes: [
+          { object: "text", leaves: [{ object: "leaf", text: "", marks: [] }] }
+        ]
+      }
+    ]
+  }
+};
+
 export const DEFAULT_NODE = "paragraph";
 
 /**

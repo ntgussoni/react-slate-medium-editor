@@ -214,6 +214,7 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   repositionMenu = () => {
+    const { isMobile } = this.props;
     const menu = this.menu;
     if (!menu) return;
 
@@ -227,9 +228,14 @@ export default class ReactSlateMediumEditor extends React.Component {
       return;
     }
 
-    const top = rect.top + window.pageYOffset - menu.offsetHeight;
-    const left =
+    let top = rect.top + window.pageYOffset - menu.offsetHeight;
+    let left =
       rect.left + window.pageXOffset - menu.offsetWidth / 2 + rect.width / 2;
+
+    if (isMobile) {
+      top = rect.top + window.pageYOffset + menu.offsetHeight;
+      left = 0;
+    }
 
     menu.style.opacity = 1;
     menu.style.top = `${top < 0 ? 0 : top}px`;
@@ -261,12 +267,19 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   render() {
-    const { value, placeholder, readOnly, className } = this.props;
+    const {
+      value,
+      placeholder,
+      readOnly,
+      className,
+      isMobile = false
+    } = this.props;
 
     return (
-      <div className={className}>
+      <div className={className} style={{ marginLeft: 32 }}>
         <Editor
           readOnly={readOnly}
+          isMobile={isMobile}
           placeholder={placeholder || "Enter some text..."}
           value={value}
           onChange={this.onChange}
@@ -292,12 +305,13 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   renderEditor = (props, editor, next) => {
-    const { onFileSelected } = this.props;
+    const { onFileSelected, isMobile } = this.props;
     const children = next();
     return (
       <React.Fragment>
         {children}
         <HoverMenu
+          isMobile={isMobile}
           innerRef={menu => (this.menu = menu)}
           onToggleLinkVisibility={this.toggleLinkVisibility}
           onMenuReposition={this.scheduleReposition}

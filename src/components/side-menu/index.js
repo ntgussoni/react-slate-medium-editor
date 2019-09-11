@@ -4,52 +4,8 @@ import { ReactComponent as VideoIcon } from "../../assets/icons/video-plus-regul
 
 import ImageUploadButton from "./image-upload-button";
 import VideoUploadButton from "./video-upload-button";
-
+import { Button, Icon } from "./Button";
 import styled, { css } from "styled-components";
-
-const Button = styled.span`
-  cursor: pointer;
-  border: 1px solid #000;
-  background: white;
-  border-radius: 100%;
-
-  ${props =>
-    props.opened &&
-    css`
-      transform: scale(1) rotate(0deg);
-      opacity: 1;
-      transition-duration: ${props => props.delay}ms;
-      transition-timing-function: ease-in;
-    `}
-  ${props =>
-    !props.opened &&
-    css`
-      transform: scale(0) rotate(-45deg);
-      opacity: 0;
-      transition-duration: ${props => props.delay}ms;
-      transition-timing-function: ease-in;
-    `}
-
-  &:hover {
-    svg {
-      color: #ccc;
-    }
-  }
-`;
-
-const Icon = styled.span`
-  vertical-align: text-bottom;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  svg {
-    height: 17px;
-    box-sizing: content-box;
-    background-size: cover;
-    color: ${props => (props.active ? "#ccc" : "#000")};
-  }
-`;
 
 /**
  * Give the menu some styles.
@@ -60,10 +16,10 @@ const Icon = styled.span`
 const OpenButton = styled.div`
   cursor: pointer;
   position: relative;
-  width: 30px;
-  height: 30px;
-  background: white;
-  border: 1px solid #000;
+  height: 32px;
+  width: 32px;
+  background-color: #ffffff;
+  box-shadow: 0 5px 15px 0 rgba(0, 0, 0, 0.2);
   color: #000;
   background: white;
   border-radius: 50%;
@@ -93,8 +49,9 @@ const OpenButton = styled.div`
 
 
   > span {
-    font-size: 24px;
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 16px;
+    height: 100%;
   }
 `;
 

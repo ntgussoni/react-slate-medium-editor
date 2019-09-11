@@ -26,15 +26,9 @@ export default class App extends Component {
 
     return (
       <div>
-        <div
-          style={{
-            margin: "0 auto",
-            marginTop: "100px",
-            display: "block",
-            width: "50%"
-          }}
-        >
+        <div>
           <ReactSlateMediumEditor
+            isMobile
             onChange={this.onChange}
             value={value}
             onFileSelected={() => {}}

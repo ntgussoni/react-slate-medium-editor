@@ -15,7 +15,7 @@ import { ReactComponent as AlignJustify } from "../../assets/icons/align_justify
 import { ReactComponent as AlignLeft } from "../../assets/icons/align_left.svg";
 import { ReactComponent as AlignRight } from "../../assets/icons/align_right.svg";
 
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 import {
   setData,
@@ -111,6 +111,9 @@ const Arrow = styled.span`
 `;
 
 const StyledMenu = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding-left: 5px;
   padding-right: 5px;
   position: absolute;
@@ -122,6 +125,14 @@ const StyledMenu = styled.div`
   background-image: linear-gradient(to bottom, rgba(49, 49, 47, 0.99), #262625);
   border-radius: 4px;
   transition: opacity 0.75s;
+
+  ${({ isMobile }) =>
+    isMobile &&
+    css`
+      border-radius: 0;
+      width: 100vw;
+      margin-top: 0px;
+    `}
 
   & > * {
     display: inline-block;
@@ -161,7 +172,8 @@ export default class HoverMenu extends React.Component {
       className,
       innerRef,
       onToggleLinkVisibility,
-      onMenuReposition
+      onMenuReposition,
+      isMobile
     } = this.props;
     const { ssrDone, showHelperInput } = this.state;
 
@@ -174,6 +186,7 @@ export default class HoverMenu extends React.Component {
 
     return ReactDOM.createPortal(
       <StyledMenu
+        isMobile={isMobile}
         onBlur={() => {
           this.setState({ showHelperInput: false }, () => {
             onToggleLinkVisibility();
@@ -203,9 +216,11 @@ export default class HoverMenu extends React.Component {
         ) : (
           this.renderButtons()
         )}
-        <MenuArrow>
-          <Arrow />
-        </MenuArrow>
+        {!isMobile && (
+          <MenuArrow>
+            <Arrow />
+          </MenuArrow>
+        )}
       </StyledMenu>,
       root
     );
