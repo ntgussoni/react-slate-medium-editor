@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { ReactComponent as VideoIcon } from "../../assets/icons/video-plus-regular.svg";
+import { ReactComponent as VideoIcon } from "../../assets/icons/play-circle-regular.svg";
 
 import ImageUploadButton from "./image-upload-button";
 import VideoUploadButton from "./video-upload-button";
