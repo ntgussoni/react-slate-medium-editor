@@ -77,7 +77,7 @@ const StyledMenu = styled.div`
   z-index: 9999;
   top: -10000px;
   left: -10000px;
-  margin-left: -40px;
+  margin-left: -32px;
 `;
 
 export default class SideMenu extends React.Component {

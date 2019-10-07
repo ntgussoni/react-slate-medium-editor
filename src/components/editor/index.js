@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "styled-components";
 import { Block } from "slate";
 import { Editor } from "slate-react";
 
@@ -98,6 +99,12 @@ const DEFAULT_COMPONENTS = {
   embed: VideoEmbed
 };
 
+const StyledDiv = styled.div`
+  margin-left: 32px;
+  user-select: text;
+  -webkit-user-select: text;
+`;
+
 /**
  * The hovering menu example.
  *
@@ -124,7 +131,7 @@ export default class ReactSlateMediumEditor extends React.Component {
   };
 
   componentDidUpdate = () => {
-    this.updateMenu();
+    // this.updateMenu();
     this.updateSideMenu();
   };
 
@@ -156,40 +163,62 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   updateSideMenu = () => {
+    const { value } = this.props;
+    const { selection, texts, blocks } = value;
+    const sideMenu = this.sideMenu;
+    if (!sideMenu) return;
+    if (!value) return;
+    if (!selection) return;
+
+    const isCollapsed = selection.isCollapsed;
+    const topBlock = blocks.get(0);
+    const isAParagraph = topBlock && topBlock.type === DEFAULT_NODE;
+    const isEmptyText = texts && texts.get(0) && texts.get(0).text.length === 0;
+    if (isCollapsed && isAParagraph && isEmptyText) {
+      this.repositionSideMenu();
+    } else {
+      sideMenu.removeAttribute("style");
+    }
+  };
+
+  getRangeBoundingClientRect = range => {
+    var rects = range.getClientRects();
+    var top = 0;
+    var right = 0;
+    var bottom = 0;
+    var left = 0;
+
+    if (rects.length) {
+      ({ top, right, bottom, left } = rects[0]);
+
+      for (var ii = 1; ii < rects.length; ii++) {
+        var rect = rects[ii];
+        if (rect.height !== 0 || rect.width !== 0) {
+          top = Math.min(top, rect.top);
+          right = Math.max(right, rect.right);
+          bottom = Math.max(bottom, rect.bottom);
+          left = Math.min(left, rect.left);
+        }
+      }
+    }
+    return {
+      top,
+      right,
+      bottom,
+      left,
+      width: right - left,
+      height: bottom - top
+    };
+  };
+
+  repositionSideMenu = () => {
     const sideMenu = this.sideMenu;
     if (!sideMenu) return;
 
-    const { value } = this.props;
-    if (!value) return;
-    const { selection, blocks, texts } = value;
+    const rect = this.getRangeBoundingClientRect(
+      window.getSelection().getRangeAt(0)
+    );
 
-    if (!selection) return;
-
-    if (selection.isBlurred || selection.isExpanded) {
-      sideMenu.removeAttribute("style");
-      return;
-    }
-
-    const native = window.getSelection();
-
-    if (native.rangeCount === 0) {
-      sideMenu.removeAttribute("style");
-      return;
-    }
-    const topBlock = blocks.get(0);
-    const notAParagraph = topBlock && topBlock.type !== DEFAULT_NODE;
-    const notEmptyText =
-      texts && texts.get(0) && texts.get(0).text.length !== 0;
-
-    if (notAParagraph || notEmptyText) {
-      sideMenu.removeAttribute("style");
-      return;
-    }
-
-    const rect = window
-      .getSelection()
-      .getRangeAt(0)
-      .getBoundingClientRect();
     const top = rect.top + window.pageYOffset - (15 - rect.height / 2);
     const left = rect.left;
 
@@ -276,7 +305,7 @@ export default class ReactSlateMediumEditor extends React.Component {
     } = this.props;
 
     return (
-      <div className={className} style={{ marginLeft: 32 }}>
+      <StyledDiv className={className}>
         <Editor
           readOnly={readOnly}
           isMobile={isMobile}
@@ -292,7 +321,7 @@ export default class ReactSlateMediumEditor extends React.Component {
           renderMark={this.renderMark}
           schema={schema}
         />
-      </div>
+      </StyledDiv>
     );
   }
 
