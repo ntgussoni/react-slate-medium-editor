@@ -28,7 +28,6 @@ export default class App extends Component {
       <div>
         <div>
           <ReactSlateMediumEditor
-            isMobile
             onChange={this.onChange}
             value={value}
             onFileSelected={() => {}}

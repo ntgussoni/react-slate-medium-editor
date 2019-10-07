@@ -131,7 +131,7 @@ export default class ReactSlateMediumEditor extends React.Component {
   };
 
   componentDidUpdate = () => {
-    // this.updateMenu();
+    this.updateMenu();
     this.updateSideMenu();
   };
 
