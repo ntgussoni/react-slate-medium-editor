@@ -214,6 +214,8 @@ export default class ReactSlateMediumEditor extends React.Component {
   repositionSideMenu = () => {
     const sideMenu = this.sideMenu;
     if (!sideMenu) return;
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) return;
 
     const rect = this.getRangeBoundingClientRect(
       window.getSelection().getRangeAt(0)
