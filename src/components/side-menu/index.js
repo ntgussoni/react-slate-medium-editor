@@ -53,6 +53,34 @@ const OpenButton = styled.div`
     line-height: 16px;
     height: 100%;
   }
+
+  .tooltiptext {
+    font-size: 12px;
+    line-height: 18px;
+    opacity: 0.8;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 150%;
+    left: 50%;
+    margin-left: -60px;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: black transparent transparent transparent;
+    }
+  }
 `;
 
 const ButtonContainer = styled.div`
@@ -83,6 +111,7 @@ const StyledMenu = styled.div`
 export default class SideMenu extends React.Component {
   state = {
     opened: false,
+    showTooltip: true,
     ssrDone: false
   };
 
@@ -93,7 +122,7 @@ export default class SideMenu extends React.Component {
   toggleSideMenu = e => {
     e.preventDefault();
     this.setState(prevState => {
-      return { opened: !prevState.opened };
+      return { opened: !prevState.opened, showTooltip: false };
     });
   };
   /**
@@ -104,18 +133,23 @@ export default class SideMenu extends React.Component {
 
   render() {
     const { className, innerRef, onFileSelected, editor } = this.props;
-    const { opened, ssrDone } = this.state;
+    const { opened, ssrDone, showTooltip } = this.state;
 
     if (!ssrDone) {
       return null;
     }
 
-    const root = window.document.getElementsByTagName("body")[0];
+    const root = window.document.getElementById(`slate-medium-editor`);
 
     return ReactDOM.createPortal(
       <StyledMenu opened={opened} className={className} ref={innerRef}>
         <OpenButton opened={opened} onMouseDown={this.toggleSideMenu}>
           <Icon>+</Icon>
+          {showTooltip && (
+            <div className="tooltiptext">
+              Agregá imágenes para hacer tu contenido más atractivo
+            </div>
+          )}
         </OpenButton>
 
         <ButtonContainer>

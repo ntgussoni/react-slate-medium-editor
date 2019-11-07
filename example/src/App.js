@@ -26,7 +26,7 @@ export default class App extends Component {
 
     return (
       <div>
-        <div>
+        <div style={{ maxHeight: 600, paddingLeft: 24, overflowY: "auto" }}>
           <ReactSlateMediumEditor
             onChange={this.onChange}
             value={value}

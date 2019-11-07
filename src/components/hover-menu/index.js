@@ -182,7 +182,7 @@ export default class HoverMenu extends React.Component {
       return null;
     }
 
-    const root = window.document.getElementsByTagName("body")[0];
+    const root = window.document.getElementById(`slate-medium-editor`);
 
     return ReactDOM.createPortal(
       <StyledMenu

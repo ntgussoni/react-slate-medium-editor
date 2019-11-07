@@ -100,6 +100,8 @@ const DEFAULT_COMPONENTS = {
 };
 
 const StyledDiv = styled.div`
+  z-index: 1;
+  position: relative;
   margin-left: 32px;
   user-select: text;
   -webkit-user-select: text;
@@ -110,6 +112,7 @@ const StyledDiv = styled.div`
  *
  * @type {Component}
  */
+
 export default class ReactSlateMediumEditor extends React.Component {
   state = {
     showLinkInput: false
@@ -190,9 +193,9 @@ export default class ReactSlateMediumEditor extends React.Component {
 
     if (rects.length) {
       ({ top, right, bottom, left } = rects[0]);
-
       for (var ii = 1; ii < rects.length; ii++) {
         var rect = rects[ii];
+
         if (rect.height !== 0 || rect.width !== 0) {
           top = Math.min(top, rect.top);
           right = Math.max(right, rect.right);
@@ -217,11 +220,21 @@ export default class ReactSlateMediumEditor extends React.Component {
     const selection = window.getSelection();
     if (selection.rangeCount === 0) return;
 
-    const rect = this.getRangeBoundingClientRect(
+    const childrenRect = this.getRangeBoundingClientRect(
       window.getSelection().getRangeAt(0)
     );
 
-    const top = rect.top + window.pageYOffset - (15 - rect.height / 2);
+    const parentRect = window.document
+      .getElementById(`slate-medium-editor`)
+      .getBoundingClientRect();
+
+    const rect = {
+      ...childrenRect,
+      top: childrenRect.top - parentRect.top,
+      left: childrenRect.left - parentRect.left
+    };
+
+    const top = rect.top - (15 - rect.height / 2);
     const left = rect.left;
 
     sideMenu.style.opacity = 1;
@@ -249,19 +262,25 @@ export default class ReactSlateMediumEditor extends React.Component {
     const menu = this.menu;
     if (!menu) return;
 
-    const rect = window
-      .getSelection()
-      .getRangeAt(0)
-      .getBoundingClientRect();
-
+    const childrenRect = this.getRangeBoundingClientRect(
+      window.getSelection().getRangeAt(0)
+    );
     // This is a fix for the link doing weird things
-    if (rect.top === 0 && rect.left === 0) {
+    if (childrenRect.top === 0 && childrenRect.left === 0) {
       return;
     }
+    const parentRect = window.document
+      .getElementById(`slate-medium-editor`)
+      .getBoundingClientRect();
 
-    let top = rect.top + window.pageYOffset - menu.offsetHeight;
-    let left =
-      rect.left + window.pageXOffset - menu.offsetWidth / 2 + rect.width / 2;
+    const rect = {
+      ...childrenRect,
+      top: childrenRect.top - parentRect.top,
+      left: childrenRect.left - parentRect.left
+    };
+
+    let top = rect.top - menu.offsetHeight;
+    let left = rect.left - menu.offsetWidth / 2 + rect.width / 2;
 
     if (isMobile) {
       top = rect.top + window.pageYOffset + menu.offsetHeight;
@@ -269,8 +288,8 @@ export default class ReactSlateMediumEditor extends React.Component {
     }
 
     menu.style.opacity = 1;
-    menu.style.top = `${top < 0 ? 0 : top}px`;
-    menu.style.left = `${left < 0 ? 0 : left}px`;
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
   };
 
   updateMenu = () => {
@@ -307,7 +326,7 @@ export default class ReactSlateMediumEditor extends React.Component {
     } = this.props;
 
     return (
-      <StyledDiv className={className}>
+      <StyledDiv id="slate-medium-editor" className={className}>
         <Editor
           readOnly={readOnly}
           isMobile={isMobile}
@@ -338,6 +357,7 @@ export default class ReactSlateMediumEditor extends React.Component {
   renderEditor = (props, editor, next) => {
     const { onFileSelected, isMobile } = this.props;
     const children = next();
+
     return (
       <React.Fragment>
         {children}
