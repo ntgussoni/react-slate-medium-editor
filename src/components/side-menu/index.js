@@ -66,19 +66,19 @@ const OpenButton = styled.div`
     padding: 5px 0;
     position: absolute;
     z-index: 1;
-    bottom: 150%;
-    left: 50%;
-    margin-left: -60px;
+    top: -66%;
+    left: 110%;
+    margin-left: 16px;
 
     &::after {
-      content: "";
+      content: " ";
       position: absolute;
-      top: 100%;
-      left: 50%;
-      margin-left: -5px;
+      top: 50%;
+      right: 100%; /* To the left of the tooltip */
+      margin-top: -5px;
       border-width: 5px;
       border-style: solid;
-      border-color: black transparent transparent transparent;
+      border-color: transparent black transparent transparent;
     }
   }
 `;
@@ -132,14 +132,24 @@ export default class SideMenu extends React.Component {
    */
 
   render() {
-    const { className, innerRef, onFileSelected, editor } = this.props;
+    const {
+      className,
+      innerRef,
+      onFileSelected,
+      editor,
+      editorId
+    } = this.props;
     const { opened, ssrDone, showTooltip } = this.state;
 
     if (!ssrDone) {
       return null;
     }
 
-    const root = window.document.getElementById(`slate-medium-editor`);
+    const root = window.document.getElementById(
+      `slate-medium-editor-${editorId}`
+    );
+
+    if (!root) return null;
 
     return ReactDOM.createPortal(
       <StyledMenu opened={opened} className={className} ref={innerRef}>

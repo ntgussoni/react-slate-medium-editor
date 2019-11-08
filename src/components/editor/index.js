@@ -102,7 +102,7 @@ const DEFAULT_COMPONENTS = {
 const StyledDiv = styled.div`
   z-index: 1;
   position: relative;
-  margin-left: 32px;
+  margin-left: 40px;
   user-select: text;
   -webkit-user-select: text;
 `;
@@ -117,6 +117,7 @@ export default class ReactSlateMediumEditor extends React.Component {
   state = {
     showLinkInput: false
   };
+
   /**
    * On update, update the menu.
    */
@@ -166,7 +167,7 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   updateSideMenu = () => {
-    const { value } = this.props;
+    const { value, readOnly } = this.props;
     const { selection, texts, blocks } = value;
     const sideMenu = this.sideMenu;
     if (!sideMenu) return;
@@ -177,7 +178,7 @@ export default class ReactSlateMediumEditor extends React.Component {
     const topBlock = blocks.get(0);
     const isAParagraph = topBlock && topBlock.type === DEFAULT_NODE;
     const isEmptyText = texts && texts.get(0) && texts.get(0).text.length === 0;
-    if (isCollapsed && isAParagraph && isEmptyText) {
+    if (!readOnly && (isCollapsed && isAParagraph && isEmptyText)) {
       this.repositionSideMenu();
     } else {
       sideMenu.removeAttribute("style");
@@ -215,6 +216,8 @@ export default class ReactSlateMediumEditor extends React.Component {
   };
 
   repositionSideMenu = () => {
+    const { editorId = 0 } = this.props;
+
     const sideMenu = this.sideMenu;
     if (!sideMenu) return;
     const selection = window.getSelection();
@@ -225,7 +228,7 @@ export default class ReactSlateMediumEditor extends React.Component {
     );
 
     const parentRect = window.document
-      .getElementById(`slate-medium-editor`)
+      .getElementById(`slate-medium-editor-${editorId}`)
       .getBoundingClientRect();
 
     const rect = {
@@ -258,7 +261,7 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   repositionMenu = () => {
-    const { isMobile } = this.props;
+    const { isMobile, editorId = 0 } = this.props;
     const menu = this.menu;
     if (!menu) return;
 
@@ -269,8 +272,9 @@ export default class ReactSlateMediumEditor extends React.Component {
     if (childrenRect.top === 0 && childrenRect.left === 0) {
       return;
     }
+
     const parentRect = window.document
-      .getElementById(`slate-medium-editor`)
+      .getElementById(`slate-medium-editor-${editorId}`)
       .getBoundingClientRect();
 
     const rect = {
@@ -287,13 +291,17 @@ export default class ReactSlateMediumEditor extends React.Component {
       left = 0;
     }
 
+    const $menuArrow = menu.querySelector("#menu-arrow");
+
     menu.style.opacity = 1;
     menu.style.top = `${top}px`;
-    menu.style.left = `${left}px`;
+    menu.style.left = `${left < 0 ? 0 : left}px`;
+
+    $menuArrow.style.left = left < 0 ? `calc(50% + ${left}px)` : "50%";
   };
 
   updateMenu = () => {
-    const { value } = this.props;
+    const { value, readOnly } = this.props;
     const { showLinkInput } = this.state;
     const { fragment, selection, focusBlock } = value;
     const menu = this.menu;
@@ -303,7 +311,7 @@ export default class ReactSlateMediumEditor extends React.Component {
     const isImage = focusBlock && focusBlock.type === "image";
     const isText = selection.isExpanded && fragment.text !== "";
     const textOrImageSelected = selection.isFocused && (isText || isImage);
-    if (textOrImageSelected || showLinkInput) {
+    if (!readOnly && (textOrImageSelected || showLinkInput)) {
       this.repositionMenu();
     } else {
       menu.removeAttribute("style");
@@ -322,12 +330,13 @@ export default class ReactSlateMediumEditor extends React.Component {
       placeholder,
       readOnly,
       className,
-      isMobile = false
+      isMobile = false,
+      editorId = 0
     } = this.props;
-
     return (
-      <StyledDiv id="slate-medium-editor" className={className}>
+      <StyledDiv id={`slate-medium-editor-${editorId}`} className={className}>
         <Editor
+          editorId={editorId}
           readOnly={readOnly}
           isMobile={isMobile}
           placeholder={placeholder || "Enter some text..."}
@@ -355,13 +364,14 @@ export default class ReactSlateMediumEditor extends React.Component {
    */
 
   renderEditor = (props, editor, next) => {
-    const { onFileSelected, isMobile } = this.props;
+    const { onFileSelected, isMobile, editorId = 0 } = this.props;
     const children = next();
 
     return (
       <React.Fragment>
         {children}
         <HoverMenu
+          editorId={editorId}
           isMobile={isMobile}
           innerRef={menu => (this.menu = menu)}
           onToggleLinkVisibility={this.toggleLinkVisibility}
@@ -369,6 +379,7 @@ export default class ReactSlateMediumEditor extends React.Component {
           editor={editor}
         />
         <SideMenu
+          editorId={editorId}
           innerRef={sideMenu => (this.sideMenu = sideMenu)}
           editor={editor}
           onFileSelected={onFileSelected}

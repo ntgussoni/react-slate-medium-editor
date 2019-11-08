@@ -173,7 +173,8 @@ export default class HoverMenu extends React.Component {
       innerRef,
       onToggleLinkVisibility,
       onMenuReposition,
-      isMobile
+      isMobile,
+      editorId
     } = this.props;
     const { ssrDone, showHelperInput } = this.state;
 
@@ -182,7 +183,11 @@ export default class HoverMenu extends React.Component {
       return null;
     }
 
-    const root = window.document.getElementById(`slate-medium-editor`);
+    const root = window.document.getElementById(
+      `slate-medium-editor-${editorId}`
+    );
+
+    if (!root) return null;
 
     return ReactDOM.createPortal(
       <StyledMenu
@@ -217,7 +222,7 @@ export default class HoverMenu extends React.Component {
           this.renderButtons()
         )}
         {!isMobile && (
-          <MenuArrow>
+          <MenuArrow id="menu-arrow">
             <Arrow />
           </MenuArrow>
         )}
